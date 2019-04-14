@@ -1,0 +1,7 @@
+*.pyc
+backup/
+*results.txt
+test_scores.txt
+results/
+software/
+data/
