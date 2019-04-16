@@ -17,6 +17,7 @@ cur_dir = os.path.dirname(os.path.realpath(__file__))
 #sys.path.append('%s/software/node2vec/src' % cur_dir)
 #import node2vec
 
+
 class MyDataset(InMemoryDataset):
     def __init__(self, data_list, root, transform=None, pre_transform=None):
         self.data_list = data_list
@@ -48,7 +49,39 @@ class MyDataset(InMemoryDataset):
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
         del self.data_list
-        #self.data, self.slices = data, slices
+
+
+class MyLargeDataset(Dataset):
+    def __init__(self, data_list, root, transform=None, pre_transform=None):
+        self.data_list = data_list
+        super(MyLargeDataset, self).__init__(root, transform, pre_transform)
+        self.data, self.slices = torch.load(self.processed_paths[0])
+
+    @property
+    def raw_file_names(self):
+        return []
+
+    @property
+    def processed_file_names(self):
+        return ['data.pt']
+
+    def download(self):
+        # Download to `self.raw_dir`.
+        pass
+
+    def process(self):
+        # Read data into huge `Data` list.
+        data_list = self.data_list
+
+        if self.pre_filter is not None:
+            data_list = [data for data in data_list if self.pre_filter(data)]
+
+        if self.pre_transform is not None:
+            data_list = [self.pre_transform(data) for data in data_list]
+
+        data, slices = self.collate(data_list)
+        torch.save((data, slices), self.processed_paths[0])
+        del self.data_list
 
 
 def nx_to_PyGGraph(g, graph_label, node_labels, node_features, max_node_label, class_values):
@@ -84,26 +117,41 @@ def links2subgraphs(
         max_nodes_per_hop=None, 
         u_features=None, 
         v_features=None, 
-        class_values=None):
+        max_node_label=None, 
+        class_values=None, 
+        testing=False):
     # extract enclosing subgraphs
-    max_n_label = {'max_node_label': 0}
+    if max_node_label is None:  # if not provided, infer from graphs
+        max_n_label = {'max_node_label': 0}
+
     def helper(A, links, g_labels):
         g_list = []
         with tqdm(total=len(links[0])) as pbar:
             for i, j, g_label in zip(links[0], links[1], g_labels):
                 g, n_labels, n_features = subgraph_extraction_labeling((i, j), A, h, max_nodes_per_hop, u_features, v_features, class_values)
-                max_n_label['max_node_label'] = max(max(n_labels), max_n_label['max_node_label'])
-                g_list.append((g, g_label, n_labels, n_features))
+                if max_node_label is None:
+                    max_n_label['max_node_label'] = max(max(n_labels), max_n_label['max_node_label'])
+                    g_list.append((g, g_label, n_labels, n_features))
+                else:
+                    g_list.append(nx_to_PyGGraph(g, g_label, n_labels, n_features, max_node_label, class_values))
                 pbar.update(1)
         return g_list
+
     print('Enclosing subgraph extraction begins...')
     train_graphs = helper(A, train_indices, train_labels)
-    val_graphs = helper(A, val_indices, val_labels)
+    if not testing:
+        val_graphs = helper(A, val_indices, val_labels)
+    else:
+        val_graphs = []
     test_graphs = helper(A, test_indices, test_labels)
-    train_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in train_graphs]
-    val_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in val_graphs]
-    test_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in test_graphs]
-    return train_graphs, val_graphs, test_graphs, max_n_label['max_node_label']
+
+    if max_node_label is None:
+        train_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in train_graphs]
+        val_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in val_graphs]
+        test_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in test_graphs]
+    
+    return train_graphs, val_graphs, test_graphs
+
 
 
 def subgraph_extraction_labeling(ind, A, h=1, max_nodes_per_hop=None, u_features=None, v_features=None, class_values=None):

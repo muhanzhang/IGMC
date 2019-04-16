@@ -3,7 +3,7 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Linear, Conv1d
-from torch_geometric.nn import GCNConv, RGCNConv, global_sort_pool
+from torch_geometric.nn import GCNConv, RGCNConv, global_sort_pool, global_add_pool
 import pdb
 
 class DGCNN(torch.nn.Module):
@@ -13,8 +13,8 @@ class DGCNN(torch.nn.Module):
             node_nums = sorted([g.num_nodes for g in dataset])
             k = node_nums[int(math.ceil(k * len(node_nums)))-1]
             k = max(10, k)  # no smaller than 10
-        print('k used in sortpooling is:', k)
-        self.k = k
+        self.k = int(k)
+        print('k used in sortpooling is:', self.k)
         self.regression = regression
         self.convs = torch.nn.ModuleList()
         self.convs.append(gconv(dataset.num_features, latent_dim[0]))
@@ -76,6 +76,7 @@ class DGCNN_RS(DGCNN):
         self.convs.append(gconv(dataset.num_features, latent_dim[0], num_relations, num_bases))
         for i in range(0, len(latent_dim)-1):
             self.convs.append(gconv(latent_dim[i], latent_dim[i+1], num_relations, num_bases))
+        #self.lin1 = Linear(sum(latent_dim), 128)
 
     def forward(self, data):
         x, edge_index, edge_type, batch = data.x, data.edge_index, data.edge_type, data.batch
@@ -90,6 +91,9 @@ class DGCNN_RS(DGCNN):
         x = self.maxpool1d(x)
         x = F.relu(self.conv1d_params2(x))
         x = x.view(len(x), -1)  # flatten
+        '''
+        x = global_add_pool(concat_states, batch)
+        '''
         x = F.relu(self.lin1(x))
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin2(x)

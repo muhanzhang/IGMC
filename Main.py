@@ -14,7 +14,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from util_functions import *
 from data_utils import *
 from preprocessing import *
-from PyG_GNN.train_eval import train_multiple_epochs
+from PyG_GNN.train_eval import *
 from PyG_GNN.models import DGCNN, DGCNN_RS
 
 
@@ -26,38 +26,33 @@ parser.add_argument('--testing', action='store_true', default=False,
 parser.add_argument('--debug', action='store_true', default=False,
                     help='turn on debugging mode')
 parser.add_argument('--data-name', default='ml_100k', help='dataset name')
+parser.add_argument('--data-appendix', default='', 
+                    help='what to append to save-names when saving datasets')
 parser.add_argument('--save-appendix', default='', 
-                    help='what to append to data-name as save-name for results')
-parser.add_argument('--train-name', default=None, help='train name')
-parser.add_argument('--test-name', default=None, help='test name')
+                    help='what to append to save-names when saving results')
 parser.add_argument('--max-train-num', type=int, default=None, 
                     help='set maximum number of train links (to fit into memory)')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--data-seed', type=int, default=1234, metavar='S',
                     help='seed to shuffle data (1234,2341,3412,4123,1324 are used)')
-parser.add_argument('--test-ratio', type=float, default=0.1,
-                    help='ratio of test links')
 parser.add_argument('--reprocess', action='store_true', default=False,
                     help='if True, reprocess data instead of using prestored .pkl data')
 parser.add_argument('--keep-old', action='store_true', default=False,
                     help='if True, do not remove any old data in the result folder')
-parser.add_argument('--save-interval', type=int, default=100,
+parser.add_argument('--save-interval', type=int, default=10,
                     help='save model states every * epochs ')
 # model settings
-parser.add_argument('--continue-from', type=int, default=None, 
-                    help="from which epoch's checkpoint to continue training")
-parser.add_argument('--classification', action='store_true', default=False,
-                    help='if true, use classification loss instead of regression loss')
 parser.add_argument('--hop', default=1, metavar='S', 
                     help='enclosing subgraph hop number, \
                     options: 1, 2,..., "auto"')
-parser.add_argument('--max-nodes-per-hop', default=None, 
+parser.add_argument('--max-nodes-per-hop', default=10000, 
                     help='if > 0, upper bound the # nodes per hop by subsampling')
 parser.add_argument('--use-features', action='store_true', default=False,
                     help='whether to use node features (side information)')
+parser.add_argument('--k', default=0.6, type=float, 
+                    help='k used in sortpooling, if k < 1, \
+                    treat as a percentile')
 # optimization settings
 parser.add_argument('--lr', type=float, default=1e-3, metavar='LR',
                     help='learning rate (default: 1e-3)')
@@ -65,17 +60,20 @@ parser.add_argument('--epochs', type=int, default=50, metavar='N',
                     help='number of epochs to train')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='batch size during training')
+# transfer learning settings
+parser.add_argument('--transfer', action='store_true', default=False,
+                    help='if True, load a pretrained model instead of training')
+parser.add_argument('--model-pos', default='', 
+                    help="where to load the transferred model's state")
 
 args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
 torch.manual_seed(args.seed)
-if args.cuda:
+if torch.cuda.is_available():
     torch.cuda.manual_seed(args.seed)
 print(args)
 
 random.seed(args.seed)
 np.random.seed(args.seed)
-torch.manual_seed(args.seed)
 if args.hop != 'auto':
     args.hop = int(args.hop)
 if args.max_nodes_per_hop is not None:
@@ -85,14 +83,14 @@ if args.max_nodes_per_hop is not None:
 '''Prepare data'''
 args.file_dir = os.path.dirname(os.path.realpath('__file__'))
 if args.testing:
-    val_test_appendix = 'test'
+    val_test_appendix = 'testmode'
 else:
-    val_test_appendix = 'val'
-args.res_dir = os.path.join(args.file_dir, 'results/{}_{}{}'.format(args.data_name, val_test_appendix, args.save_appendix))
+    val_test_appendix = 'valmode'
+args.res_dir = os.path.join(args.file_dir, 'results/{}{}_{}'.format(args.data_name, args.save_appendix, val_test_appendix))
+if args.transfer:
+    args.res_dir += '_transfer'
 if not os.path.exists(args.res_dir):
     os.makedirs(args.res_dir) 
-
-args.data_dir = os.path.join(args.file_dir, 'data/{}'.format(args.data_name))
 
 # delete old result files
 remove_list = [f for f in os.listdir(args.res_dir) if not f.endswith(".pkl") and 
@@ -108,6 +106,7 @@ if not args.keep_old:
     copy('util_functions.py', args.res_dir)
     copy('PyG_GNN/models.py', args.res_dir)
     copy('PyG_GNN/train_eval.py', args.res_dir)
+    if args.transfer: copy(args.model_pos, args.res_dir)
     # save command line input
     cmd_input = 'python ' + ' '.join(sys.argv)
     with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'w') as f:
@@ -152,13 +151,14 @@ Explanations of the above preprocessing:
     Thus, to get the original rating from a rating label, apply: class_values[label]
     Note that train_labels etc. are all rating labels.
     But the numbers in adj_train are rating labels + 1, why? Because to accomodate neutral ratings 0! Thus, to get any edge label from adj_train, remember to substract 1.
+    If testing=True, adj_train will include both train and val ratings, and all train data will be the combination of train and val.
 '''
 
-A = adj_train
 if args.use_features:
     u_features, v_features = u_features.toarray(), v_features.toarray()
 else:
     u_features, v_features = None, None
+
 if args.debug:
     num_data = 1000
     train_u_indices, train_v_indices = train_u_indices[:num_data], train_v_indices[:num_data]
@@ -169,20 +169,25 @@ train_indices = (train_u_indices, train_v_indices)
 val_indices = (val_u_indices, val_v_indices)
 test_indices = (test_u_indices, test_v_indices)
 
+print('#train: %d, #val: %d, #test: %d' % (len(train_u_indices), len(val_u_indices), len(test_u_indices)))
+
+'''
+Create train/val/test datasets.
+If reprocess=True, delete the previously cached data and reprocess.
+Note that we must create different datasets for testing mode and validating mode, since the adj_train will be different (thus extracted subgraphs will be different in different modes).
+'''
 train_graphs, val_graphs, test_graphs = None, None, None
-# if reprocess, delete the previously cached data
-if args.reprocess or not os.path.isdir('data/{}_train'.format(args.data_name)):
-    if os.path.isdir('data/{}_train'.format(args.data_name)):
-        rmtree('data/{}_train'.format(args.data_name))
-    if os.path.isdir('data/{}_val'.format(args.data_name)):
-        rmtree('data/{}_val'.format(args.data_name))
-    if os.path.isdir('data/{}_trainval'.format(args.data_name)):
-        rmtree('data/{}_trainval'.format(args.data_name))
-    if os.path.isdir('data/{}_test'.format(args.data_name)):
-        rmtree('data/{}_test'.format(args.data_name))
+data_combo = (args.data_name, args.data_appendix, val_test_appendix)
+if args.reprocess or not os.path.isdir('data/{}{}/{}/train'.format(*data_combo)):
+    if os.path.isdir('data/{}{}/{}/train'.format(*data_combo)):
+        rmtree('data/{}{}/{}/train'.format(*data_combo))
+    if os.path.isdir('data/{}{}/{}/val'.format(*data_combo)):
+        rmtree('data/{}{}/{}/val'.format(*data_combo))
+    if os.path.isdir('data/{}{}/{}/test'.format(*data_combo)):
+        rmtree('data/{}{}/{}/test'.format(*data_combo))
     # extract enclosing subgraphs and build the datasets
-    train_graphs, val_graphs, test_graphs, max_n_label = links2subgraphs(
-            A,
+    train_graphs, val_graphs, test_graphs = links2subgraphs(
+            adj_train,
             train_indices, 
             val_indices, 
             test_indices,
@@ -193,55 +198,72 @@ if args.reprocess or not os.path.isdir('data/{}_train'.format(args.data_name)):
             args.max_nodes_per_hop, 
             u_features, 
             v_features, 
-            class_values)
+            args.hop*2+1, 
+            class_values, 
+            args.testing)
 
-train_graphs = MyDataset(train_graphs, root='data/{}_train'.format(args.data_name))
-val_graphs = MyDataset(val_graphs, root='data/{}_val'.format(args.data_name))
-test_graphs = MyDataset(test_graphs, root='data/{}_test'.format(args.data_name))
+if not args.testing:
+    val_graphs = MyDataset(val_graphs, root='data/{}{}/{}/val'.format(*data_combo))
+test_graphs = MyDataset(test_graphs, root='data/{}{}/{}/test'.format(*data_combo))
+train_graphs = MyDataset(train_graphs, root='data/{}{}/{}/train'.format(*data_combo))
 
-print('#train: %d, #val: %d, #test: %d' % (len(train_graphs), len(val_graphs), len(test_graphs)))
 
-'''Determine training/testing data'''
-if args.testing: 
-    #train_graphs = train_graphs + val_graphs
-    train_list = [data for data in train_graphs]
-    val_list = [data for data in val_graphs]
-    # feed one graph temporarily (otherwise the data and slices will be processed twice)
-    train_graphs = MyDataset([train_list[0]], root='data/{}_trainval'.format(args.data_name))
-    # construct the data and slices now
-    train_graphs.data, train_graphs.slices = train_graphs.collate(train_list + val_list)
-else: # in validation phase
-    test_graphs = val_graphs
+'''Determine testing data'''
+if not args.testing: 
+    #test_graphs = val_graphs
+    pass
 
-if args.max_train_num is not None:  # sample certain number of train
+'''sample certain number of train'''
+if args.max_train_num is not None:  
     perm = np.random.permutation(len(train_graphs))[:args.max_train_num]
     train_graphs = train_graphs[torch.tensor(perm)]
-
 
 
 '''Train and apply model'''
 # GNN configurations
 #model = DGCNN(train_graphs, latent_dim=[500, 500], k=0.6, regression=True)
-model = DGCNN_RS(train_graphs, latent_dim=[32, 32, 32, 1], k=0.6, num_relations=len(class_values), num_bases=4, regression=True)
+model = DGCNN_RS(train_graphs, 
+                 latent_dim=[32, 32, 32, 1], 
+                 k=args.k, 
+                 num_relations=len(class_values), 
+                 num_bases=4, 
+                 regression=True)
 
-def logger(info):
+
+def logger(info, model, optimizer):
     epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
     with open(os.path.join(args.res_dir, 'log.txt'), 'a') as f:
         f.write('Epoch {}, train loss {:.4f}, test rmse {:.4f}\n'.format(
             epoch, train_loss, test_rmse
             ))
+    if epoch % args.save_interval == 0:
+        print('Saving model states...')
+        model_name = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))
+        optimizer_name = os.path.join(args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch))
+        if model is not None:
+            torch.save(model.state_dict(), model_name)
+        if optimizer is not None:
+            torch.save(optimizer.state_dict(), optimizer_name)
+
+if not args.transfer:
+    train_multiple_epochs(train_graphs,
+                          test_graphs,
+                          model,
+                          args.epochs, 
+                          args.batch_size, 
+                          args.lr, 
+                          lr_decay_factor=0.1, 
+                          lr_decay_step_size=100, 
+                          weight_decay=0, 
+                          logger=logger)
+else:
+    model.load_state_dict(torch.load(args.model_pos))
+    rmse = test_once(test_graphs, model, args.batch_size, logger)
+    print('Transfer learning rmse is: {:.4f}'.format(rmse))
+
+    
 
 
-train_multiple_epochs(train_graphs,
-                      test_graphs,
-                      model,
-                      args.epochs, 
-                      args.batch_size, 
-                      args.lr, 
-                      lr_decay_factor=0.1, 
-                      lr_decay_step_size=100, 
-                      weight_decay=0, 
-                      logger=logger)
 
 pdb.set_trace()
 

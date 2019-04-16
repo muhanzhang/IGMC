@@ -44,9 +44,9 @@ def train_multiple_epochs(train_dataset,
             'train_loss': train_loss,
             'test_rmse': rmses[-1],
         }
-        pbar.set_description(' '.join([x+': {}'.format(y) for x, y in eval_info.items()]))
+        pbar.set_description('Epoch {}, train loss {:.4f}, test rmse {:.4f}'.format(*eval_info.values()))
         if logger is not None:
-            logger(eval_info)
+            logger(eval_info, model, optimizer)
 
         if epoch % lr_decay_step_size == 0:
             for param_group in optimizer.param_groups:
@@ -66,22 +66,22 @@ def train_multiple_epochs(train_dataset,
     return rmses[-1]
 
 
-def k_fold(dataset, folds):
-    skf = StratifiedKFold(folds, shuffle=True, random_state=12345)
+def test_once(test_dataset,
+              model,
+              batch_size,
+              logger=None):
 
-    test_indices, train_indices = [], []
-    for _, idx in skf.split(torch.zeros(len(dataset)), dataset.data.y):
-        test_indices.append(torch.from_numpy(idx))
-
-    val_indices = [test_indices[i - 1] for i in range(folds)]
-
-    for i in range(folds):
-        train_mask = torch.ones(len(dataset), dtype=torch.uint8)
-        train_mask[test_indices[i]] = 0
-        train_mask[val_indices[i]] = 0
-        train_indices.append(train_mask.nonzero().view(-1))
-
-    return train_indices, test_indices, val_indices
+    test_loader = DataLoader(test_dataset, batch_size, shuffle=False)
+    model.to(device)
+    rmse = eval_rmse(model, test_loader, device)
+    eval_info = {
+        'epoch': 0,
+        'train_loss': 0,
+        'test_rmse': rmse,
+        }
+    if logger is not None:
+        logger(eval_info, None, None)
+    return rmse
 
 
 def num_graphs(data):
@@ -106,6 +106,7 @@ def train(model, optimizer, loader, device, regression=False):
         loss.backward()
         total_loss += loss.item() * num_graphs(data)
         optimizer.step()
+        torch.cuda.empty_cache()
     return total_loss / len(loader.dataset)
 
 
