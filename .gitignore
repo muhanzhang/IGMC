@@ -5,3 +5,4 @@ backup/
 test_scores.txt
 results/
 software/
+PyG_GNN/

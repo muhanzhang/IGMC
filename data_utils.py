@@ -13,9 +13,9 @@ from zipfile import ZipFile
 import shutil
 import os.path
 try:
-    from StringIO import StringIO
+    from BytesIO import BytesIO
 except ImportError:
-    from io import StringIO
+    from io import BytesIO
 
 
 def data_iterator(data, batch_size):
@@ -77,7 +77,7 @@ def download_dataset(dataset, files, data_dir):
         else:
             raise ValueError('Invalid dataset option %s' % dataset)
 
-        with ZipFile(StringIO(request.read())) as zip_ref:
+        with ZipFile(BytesIO(request.read())) as zip_ref:
             zip_ref.extractall('data/')
 
         os.rename(target_dir, data_dir)
@@ -150,7 +150,7 @@ def load_data(fname, seed=1234, verbose=True):
 
         # shuffle here like cf-nade paper with python's own random class
         # make sure to convert to list, otherwise random.shuffle acts weird on it without a warning
-        data_array = data.as_matrix().tolist()
+        data_array = data.values.tolist()
         random.seed(seed)
         random.shuffle(data_array)
         data_array = np.array(data_array)
@@ -233,7 +233,7 @@ def load_data(fname, seed=1234, verbose=True):
 
         # shuffle here like cf-nade paper with python's own random class
         # make sure to convert to list, otherwise random.shuffle acts weird on it without a warning
-        data_array = data.as_matrix().tolist()
+        data_array = data.values.tolist()
         random.seed(seed)
         random.shuffle(data_array)
         data_array = np.array(data_array)
@@ -324,7 +324,7 @@ def load_data(fname, seed=1234, verbose=True):
 
         # shuffle here like cf-nade paper with python's own random class
         # make sure to convert to list, otherwise random.shuffle acts weird on it without a warning
-        data_array = data.as_matrix().tolist()
+        data_array = data.values.tolist()
         random.seed(seed)
         random.shuffle(data_array)
         data_array = np.array(data_array)

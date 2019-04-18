@@ -7,6 +7,7 @@ import pickle as pkl
 import os
 import h5py
 import pandas as pd
+import pdb
 
 
 from data_utils import load_data, map_data, download_dataset
@@ -115,8 +116,7 @@ def sparse_to_tuple(sparse_mx):
     return coords, values, shape
 
 
-def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=None, datasplit_from_file=False,
-                              verbose=True):
+def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=None, datasplit_from_file=False, verbose=True, rating_map=None):
     """
     Splits data set into train/val/test sets from full bipartite adjacency matrix. Shuffling of dataset is done in
     load_data function.
@@ -126,7 +126,7 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
 
     if datasplit_from_file and os.path.isfile(datasplit_path):
         print('Reading dataset splits from file...')
-        with open(datasplit_path) as f:
+        with open(datasplit_path, 'rb') as f:
             num_users, num_items, u_nodes, v_nodes, ratings, u_features, v_features = pkl.load(f)
 
         if verbose:
@@ -139,8 +139,13 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
         num_users, num_items, u_nodes, v_nodes, ratings, u_features, v_features = load_data(dataset, seed=seed,
                                                                                             verbose=verbose)
 
-        with open(datasplit_path, 'w') as f:
+        with open(datasplit_path, 'wb') as f:
             pkl.dump([num_users, num_items, u_nodes, v_nodes, ratings, u_features, v_features], f)
+
+    if rating_map is not None:
+        for i, x in enumerate(ratings):
+            ratings[i] = rating_map[x]
+        pdb.set_trace()
 
     neutral_rating = -1
 
@@ -198,7 +203,7 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
 
-def load_data_monti(dataset, testing=False):
+def load_data_monti(dataset, testing=False, rating_map=None):
     """
     Loads data from Monti et al. paper.
     """
@@ -206,6 +211,9 @@ def load_data_monti(dataset, testing=False):
     path_dataset = 'data/' + dataset + '/training_test_dataset.mat'
 
     M = load_matlab_file(path_dataset, 'M')
+    if rating_map is not None:
+        M[np.where(M)] = [rating_map[x] for x in M[np.where(M)]]
+
     Otraining = load_matlab_file(path_dataset, 'Otraining')
     Otest = load_matlab_file(path_dataset, 'Otest')
 
@@ -324,7 +332,7 @@ def load_data_monti(dataset, testing=False):
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
 
-def load_official_trainvaltest_split(dataset, testing=False):
+def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ratio=1.0):
     """
     Loads official train/test split and uses 10% of training samples for validaiton
     For each split computes 1-of-num_classes labels. Also computes training
@@ -360,11 +368,17 @@ def load_official_trainvaltest_split(dataset, testing=False):
     data_array_test = data_test.values.tolist()
     data_array_test = np.array(data_array_test)
 
+    if ratio < 1.0:
+        data_array_train = data_array_train[data_array_train[:, -1].argsort()[:int(ratio*len(data_array_train))]]
+
     data_array = np.concatenate([data_array_train, data_array_test], axis=0)
 
     u_nodes_ratings = data_array[:, 0].astype(dtypes['u_nodes'])
     v_nodes_ratings = data_array[:, 1].astype(dtypes['v_nodes'])
     ratings = data_array[:, 2].astype(dtypes['ratings'])
+    if rating_map is not None:
+        for i, x in enumerate(ratings):
+            ratings[i] = rating_map[x]
 
     u_nodes_ratings, u_dict, num_users = map_data(u_nodes_ratings)
     v_nodes_ratings, v_dict, num_items = map_data(v_nodes_ratings)

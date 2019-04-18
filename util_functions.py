@@ -51,39 +51,6 @@ class MyDataset(InMemoryDataset):
         del self.data_list
 
 
-class MyLargeDataset(Dataset):
-    def __init__(self, data_list, root, transform=None, pre_transform=None):
-        self.data_list = data_list
-        super(MyLargeDataset, self).__init__(root, transform, pre_transform)
-        self.data, self.slices = torch.load(self.processed_paths[0])
-
-    @property
-    def raw_file_names(self):
-        return []
-
-    @property
-    def processed_file_names(self):
-        return ['data.pt']
-
-    def download(self):
-        # Download to `self.raw_dir`.
-        pass
-
-    def process(self):
-        # Read data into huge `Data` list.
-        data_list = self.data_list
-
-        if self.pre_filter is not None:
-            data_list = [data for data in data_list if self.pre_filter(data)]
-
-        if self.pre_transform is not None:
-            data_list = [self.pre_transform(data) for data in data_list]
-
-        data, slices = self.collate(data_list)
-        torch.save((data, slices), self.processed_paths[0])
-        del self.data_list
-
-
 def nx_to_PyGGraph(g, graph_label, node_labels, node_features, max_node_label, class_values):
     # convert networkx graph to pytorch_geometric data format
     y = torch.FloatTensor([class_values[graph_label]])
@@ -104,6 +71,17 @@ def nx_to_PyGGraph(g, graph_label, node_labels, node_features, max_node_label, c
     data.edge_type = edge_type
     return data
     
+
+def PyGGraph_to_nx(data):
+    edges = list(zip(data.edge_index[0, :].tolist(), data.edge_index[1, :].tolist()))
+    g = nx.from_edgelist(edges)
+    edge_types = {(u, v): data.edge_type[i].item() for i, (u, v) in enumerate(edges)}  # transform r back to rating label
+    nx.set_edge_attributes(g, name='type', values=edge_types)
+    node_types = dict(zip(range(data.num_nodes), torch.argmax(data.x, 1).tolist()))
+    nx.set_node_attributes(g, name='type', values=node_types)
+    g.graph['rating'] = data.y.item()
+    return g
+
 
 def links2subgraphs(
         A,
@@ -151,7 +129,6 @@ def links2subgraphs(
         test_graphs = [nx_to_PyGGraph(*x, **max_n_label, class_values=class_values) for x in test_graphs]
     
     return train_graphs, val_graphs, test_graphs
-
 
 
 def subgraph_extraction_labeling(ind, A, h=1, max_nodes_per_hop=None, u_features=None, v_features=None, class_values=None):
@@ -314,4 +291,5 @@ def CalcAUC(sim, test_pos, test_neg):
     fpr, tpr, _ = metrics.roc_curve(labels, scores, pos_label=1)
     auc = metrics.auc(fpr, tpr)
     return auc
+
 

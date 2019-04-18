@@ -73,7 +73,7 @@ def test_once(test_dataset,
 
     test_loader = DataLoader(test_dataset, batch_size, shuffle=False)
     model.to(device)
-    rmse = eval_rmse(model, test_loader, device)
+    rmse = eval_rmse(model, test_loader, device, show_progress=True)
     eval_info = {
         'epoch': 0,
         'train_loss': 0,
@@ -122,11 +122,16 @@ def eval_acc(model, loader, device):
     return correct / len(loader.dataset)
 
 
-def eval_loss(model, loader, device, regression=False):
+def eval_loss(model, loader, device, regression=False, show_progress=False):
     model.eval()
 
     loss = 0
-    for data in loader:
+    if show_progress:
+        print('Testing begins...')
+        pbar = tqdm(loader)
+    else:
+        pbar = loader
+    for data in pbar:
         data = data.to(device)
         with torch.no_grad():
             out = model(data)
@@ -134,10 +139,24 @@ def eval_loss(model, loader, device, regression=False):
             loss += F.mse_loss(out, data.y.view(-1), reduction='sum').item()
         else:
             loss += F.nll_loss(out, data.y.view(-1), reduction='sum').item()
+        torch.cuda.empty_cache()
     return loss / len(loader.dataset)
 
 
-def eval_rmse(model, loader, device):
-    mse_loss = eval_loss(model, loader, device, True)
+def eval_rmse(model, loader, device, show_progress=False):
+    mse_loss = eval_loss(model, loader, device, True, show_progress)
     rmse = math.sqrt(mse_loss)
     return rmse
+
+
+def visualize(model, graphs, num=3):
+    model.eval()
+    model.to(device)
+    preds = []
+    for data in graphs:
+        pred = model(data)
+        preds.append(pred.item())
+    order = np.argsort(preds)
+    highest = [graphs[i] for i in order[-num:]]
+    lowest = [graphs[i] for i in order[:num]]
+    

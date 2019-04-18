@@ -14,8 +14,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from util_functions import *
 from data_utils import *
 from preprocessing import *
-from PyG_GNN.train_eval import *
-from PyG_GNN.models import DGCNN, DGCNN_RS
+from train_eval import *
+from models import DGCNN, DGCNN_RS
 
 
 
@@ -61,10 +61,16 @@ parser.add_argument('--epochs', type=int, default=50, metavar='N',
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='batch size during training')
 # transfer learning settings
+parser.add_argument('--standard-rating', action='store_true', default=False,
+                    help='if True, maps all ratings to standard 1, 2, 3.4, 5 before training')
 parser.add_argument('--transfer', action='store_true', default=False,
                     help='if True, load a pretrained model instead of training')
 parser.add_argument('--model-pos', default='', 
                     help="where to load the transferred model's state")
+# sparsity experiment settings
+parser.add_argument('--ratio', type=float, default=1.0,
+                    help="For ml_100k, if ratio < 1, sort train data by timestamp and\
+                    only keep ratio*num points")
 
 args = parser.parse_args()
 torch.manual_seed(args.seed)
@@ -79,6 +85,15 @@ if args.hop != 'auto':
 if args.max_nodes_per_hop is not None:
     args.max_nodes_per_hop = int(args.max_nodes_per_hop)
 
+if args.standard_rating:
+    if args.data_name in ['flixster', 'ml_10m']: # original 0.5, 1, ..., 5
+        rating_map = {x: int(math.ceil(x)) for x in np.arange(0.5, 5.01, 0.5).tolist()}
+    elif args.data_name == 'yahoo_music':  # original 1, 2, ..., 100
+        rating_map = {x: (x-1)//20+1 for x in range(1, 101)}
+    else:
+        rating_map = None
+else:
+    rating_map = None
 
 '''Prepare data'''
 args.file_dir = os.path.dirname(os.path.realpath('__file__'))
@@ -127,20 +142,18 @@ else:
 if args.data_name == 'flixster' or args.data_name == 'douban' or args.data_name == 'yahoo_music':
     u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
         val_labels, val_u_indices, val_v_indices, test_labels, \
-        test_u_indices, test_v_indices, class_values = load_data_monti(args.data_name, args.testing)
+        test_u_indices, test_v_indices, class_values = load_data_monti(args.data_name, args.testing, rating_map)
 
 elif args.data_name == 'ml_100k':
     print("Using official MovieLens dataset split u1.base/u1.test with 20% validation set size...")
     u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
         val_labels, val_u_indices, val_v_indices, test_labels, \
-        test_u_indices, test_v_indices, class_values = load_official_trainvaltest_split(args.data_name, args.testing)
+        test_u_indices, test_v_indices, class_values = load_official_trainvaltest_split(args.data_name, args.testing, rating_map, args.ratio)
 else:
     print("Using random dataset split ...")
     u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
         val_labels, val_u_indices, val_v_indices, test_labels, \
-        test_u_indices, test_v_indices, class_values = create_trainvaltest_split(args.data_name, 1234, args.testing,
-                                                                                 datasplit_path, True,
-                                                                                 True)
+        test_u_indices, test_v_indices, class_values = create_trainvaltest_split(args.data_name, 1234, args.testing, datasplit_path, True, True, rating_map)
 
 print('All ratings are:')
 print(class_values)
@@ -229,6 +242,9 @@ model = DGCNN_RS(train_graphs,
                  num_bases=4, 
                  regression=True)
 
+with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'a') as f:
+    f.write(str(model.k))
+    print('k is saved.')
 
 def logger(info, model, optimizer):
     epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
@@ -245,7 +261,7 @@ def logger(info, model, optimizer):
         if optimizer is not None:
             torch.save(optimizer.state_dict(), optimizer_name)
 
-if not args.transfer:
+if not args.transfer and not args.visualize:
     train_multiple_epochs(train_graphs,
                           test_graphs,
                           model,
@@ -253,59 +269,19 @@ if not args.transfer:
                           args.batch_size, 
                           args.lr, 
                           lr_decay_factor=0.1, 
-                          lr_decay_step_size=100, 
+                          lr_decay_step_size=50, 
                           weight_decay=0, 
                           logger=logger)
 else:
     model.load_state_dict(torch.load(args.model_pos))
-    rmse = test_once(test_graphs, model, args.batch_size, logger)
-    print('Transfer learning rmse is: {:.4f}'.format(rmse))
+    if args.transfer:
+        rmse = test_once(test_graphs, model, args.batch_size, logger)
+        print('Transfer learning rmse is: {:.4f}'.format(rmse))
+    elif args.visualize:
 
-    
+
 
 
 
 pdb.set_trace()
-
-'''
-optimizer = optim.Adam(model.parameters(), lr=cmd_args.learning_rate)
-scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=10, verbose=True)
-
-if args.continue_from is not None:
-    epoch = args.continue_from
-    model.load_state_dict(torch.load(os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))))
-    optimizer.load_state_dict(torch.load(os.path.join(args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch))))
-    scheduler.load_state_dict(torch.load(os.path.join(args.res_dir, 'scheduler_checkpoint{}.pth'.format(epoch))))
-
-train_idxes = list(range(len(train_graphs)))
-best_loss = None
-start_epoch = args.continue_from if args.continue_from is not None else 0
-for epoch in range(start_epoch + 1, cmd_args.num_epochs + 1):
-    random.shuffle(train_idxes)
-    model.train()
-    avg_loss = loop_dataset(train_graphs, model, train_idxes, optimizer=optimizer)
-    print('\033[92maverage training of epoch %d: RMSE_loss %.5f MAE_loss %.5f\033[0m' % (epoch, avg_loss[0], avg_loss[1]))
-    scheduler.step(avg_loss[0])
-
-    model.eval()
-    test_loss = loop_dataset(test_graphs, model, list(range(len(test_graphs))))
-    print('\033[93maverage test of epoch %d: RMSE_loss %.5f MAE_loss %.5f\033[0m' % (epoch, test_loss[0], test_loss[1]))
-
-    if epoch % args.save_interval == 0:
-        model_name = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))
-        optimizer_name = os.path.join(args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch))
-        scheduler_name = os.path.join(args.res_dir, 'scheduler_checkpoint{}.pth'.format(epoch))
-        torch.save(model.state_dict(), model_name)
-        torch.save(optimizer.state_dict(), optimizer_name)
-        torch.save(scheduler.state_dict(), scheduler_name)
-
-    with open(os.path.join(args.res_dir, 'train_RMSE_results.txt'), 'a+') as f:
-        f.write(str(avg_loss[0]) + '\n')
-    with open(os.path.join(args.res_dir, 'train_MAE_results.txt'), 'a+') as f:
-        f.write(str(avg_loss[1]) + '\n')
-    with open(os.path.join(args.res_dir, 'test_RMSE_results.txt'), 'a+') as f:
-        f.write(str(test_loss[0]) + '\n')
-    with open(os.path.join(args.res_dir, 'test_MAE_results.txt'), 'a+') as f:
-        f.write(str(test_loss[1]) + '\n')
-'''
 
