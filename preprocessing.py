@@ -208,7 +208,7 @@ def load_data_monti(dataset, testing=False, rating_map=None):
     Loads data from Monti et al. paper.
     """
 
-    path_dataset = 'data/' + dataset + '/training_test_dataset.mat'
+    path_dataset = 'raw_data/' + dataset + '/training_test_dataset.mat'
 
     M = load_matlab_file(path_dataset, 'M')
     if rating_map is not None:
@@ -344,7 +344,7 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
     # Check if files exist and download otherwise
     files = ['/u1.base', '/u1.test', '/u.item', '/u.user']
     fname = dataset
-    data_dir = 'data/' + fname
+    data_dir = 'raw_data/' + fname
 
     download_dataset(fname, files, data_dir)
 
@@ -352,8 +352,8 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
         'u_nodes': np.int32, 'v_nodes': np.int32,
         'ratings': np.float32, 'timestamp': np.float64}
 
-    filename_train = 'data/' + dataset + '/u1.base'
-    filename_test = 'data/' + dataset + '/u1.test'
+    filename_train = 'raw_data/' + dataset + '/u1.base'
+    filename_test = 'raw_data/' + dataset + '/u1.test'
 
     data_train = pd.read_csv(
         filename_train, sep=sep, header=None,
@@ -468,7 +468,7 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
 
         # movie features (genres)
         sep = r'|'
-        movie_file = 'data/' + dataset + '/u.item'
+        movie_file = 'raw_data/' + dataset + '/u.item'
         movie_headers = ['movie id', 'movie title', 'release date', 'video release date',
                          'IMDb URL', 'unknown', 'Action', 'Adventure', 'Animation',
                          'Childrens', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Fantasy',
@@ -489,7 +489,7 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
         # user features
 
         sep = r'|'
-        users_file = 'data/' + dataset + '/u.user'
+        users_file = 'raw_data/' + dataset + '/u.user'
         users_headers = ['user id', 'age', 'gender', 'occupation', 'zip code']
         users_df = pd.read_csv(users_file, sep=sep, header=None,
                                names=users_headers, engine='python')
@@ -518,7 +518,7 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
     elif dataset == 'ml_1m':
 
         # load movie features
-        movies_file = 'data/' + dataset + '/movies.dat'
+        movies_file = 'raw_data/' + dataset + '/movies.dat'
 
         movies_headers = ['movie_id', 'title', 'genre']
         movies_df = pd.read_csv(movies_file, sep=sep, header=None,
@@ -544,7 +544,7 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
                     v_features[v_dict[movie_id], genres_dict[g]] = 1.
 
         # load user features
-        users_file = 'data/' + dataset + '/users.dat'
+        users_file = 'raw_data/' + dataset + '/users.dat'
         users_headers = ['user_id', 'gender', 'age', 'occupation', 'zip-code']
         users_df = pd.read_csv(users_file, sep=sep, header=None,
                                names=users_headers, engine='python')

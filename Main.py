@@ -131,13 +131,13 @@ if not args.keep_old:
 
 if args.data_name == 'ml_1m' or args.data_name == 'ml_10m':
     if args.use_features:
-        datasplit_path = 'data/' + args.data_name + '/withfeatures_split_seed' + str(args.data_seed) + '.pickle'
+        datasplit_path = 'raw_data/' + args.data_name + '/withfeatures_split_seed' + str(args.data_seed) + '.pickle'
     else:
-        datasplit_path = 'data/' + args.data_name + '/split_seed' + str(args.data_seed) + '.pickle'
+        datasplit_path = 'raw_data/' + args.data_name + '/split_seed' + str(args.data_seed) + '.pickle'
 elif args.use_features:
-    datasplit_path = 'data/' + args.data_name + '/withfeatures.pickle'
+    datasplit_path = 'raw_data/' + args.data_name + '/withfeatures.pickle'
 else:
-    datasplit_path = 'data/' + args.data_name + '/nofeatures.pickle'
+    datasplit_path = 'raw_data/' + args.data_name + '/nofeatures.pickle'
 
 if args.data_name == 'flixster' or args.data_name == 'douban' or args.data_name == 'yahoo_music':
     u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \

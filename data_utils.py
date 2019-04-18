@@ -78,7 +78,7 @@ def download_dataset(dataset, files, data_dir):
             raise ValueError('Invalid dataset option %s' % dataset)
 
         with ZipFile(BytesIO(request.read())) as zip_ref:
-            zip_ref.extractall('data/')
+            zip_ref.extractall('raw_data/')
 
         os.rename(target_dir, data_dir)
         #shutil.rmtree(target_dir)
@@ -128,7 +128,7 @@ def load_data(fname, seed=1234, verbose=True):
 
     print('Loading dataset', fname)
 
-    data_dir = 'data/' + fname
+    data_dir = 'raw_data/' + fname
 
     if fname == 'ml_100k':
 
