@@ -1,22 +1,22 @@
-SEAL -- learning from Subgraphs, Embeddings, and Attributes for Link prediction
+IGPL -- Inductive Graph Pattern Learning from Recommender Systems
 ===============================================================================
 
 About
 -----
 
-Python version of SEAR (learning from Subgraphs, Embeddings, and Attributes for Recommender systems).
-
+IGPL is an inductive learning framework that learns graph structure features for recommender systems. Graph structure features are some repeated structure patterns related to ratings. For example, if a user $u_0$ likes an item $v_0$, we may expect to see very often that $v_0$ is also liked by some other user $u_1$ who shares a similar taste to $u_0$. By similar taste, we mean $u_1$ and $u_0$ have together both liked some other item $v_1$. In the bipartite graph, such a pattern is realized as a _like_ path connecting $(u_0,v_1,u_1,v_0)$. If there are many such paths between $u_0$ and $v_0$, we may infer that $u_0$ is highly likely to like $v_0$. Such paths are exactly graph structure features useful for rating prediction. IGPL learns general graph structure features from local subgraphs around ratings based on a graph neural network (GNN). Different from transductive matrix factorization methods, the model learned by IGPL is inductive, meaning it can be applied to unseen users and items and can be transferred to new tasks. IGPL has achieved new state-of-the-art results on several benchmark datasets, outperforming other GNN approaches such as GC-MC and sRGCNN.
 
 Installation
 ------------
 
-Install [PyTorch](https://pytorch.org/).
+Install [PyTorch](https://pytorch.org/) >= 1.0.0
+
+Install [PyTorch_Geometric](https://rusty1s.github.io/pytorch_geometric/build/html/notes/installation.html)
 
 Type
 
     bash ./install.sh
 
-to install the required software and libraries. It will download and install the default graph neural network software [\[pytorch_DGCNN\]](https://github.com/muhanzhang/pytorch_DGCNN) to the same level as the root SEAL folder (not this Python folder).
 
 
 Usages
@@ -48,25 +48,15 @@ Sometimes even extracting 1-hop enclosing subgraphs for some links leads to unaf
 Requirements
 ------------
 
-Tested with Python 2.7, Pytorch 4.0.
+Tested with Python 3.6, Pytorch 1.0.0.
 
-Required python libraries: gensim and scipy; all python libraries required by pytorch_DGCNN such as networkx, tqdm, sklearn etc.
-
-If you want to enable embeddings for link prediction, please install the network embedding software 'node2vec' in "software/" (if the included one does not work).
-
+Required python libraries: numpy, scipy, pandas, h5py, networkx, tqdm etc.
 
 Reference
 ---------
 
-If you find the code useful, please cite our paper:
-
-    @article{zhang2018link,
-      title={Link Prediction Based on Graph Neural Networks},
-      author={Zhang, Muhan and Chen, Yixin},
-      journal={arXiv preprint arXiv:1802.09691},
-      year={2018}
-    }
+If you find the code useful, please cite our paper.
 
 Muhan Zhang, Washington University in St. Louis
 muhan@wustl.edu
-9/5/2018
+4/26/2019
