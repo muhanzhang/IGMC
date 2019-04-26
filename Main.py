@@ -19,7 +19,7 @@ from models import DGCNN, DGCNN_RS
 
 
 
-parser = argparse.ArgumentParser(description='Link Prediction with SEAL')
+parser = argparse.ArgumentParser(description='Learning Inductive Graph Patterns for recommender systems')
 # general settings
 parser.add_argument('--testing', action='store_true', default=False,
                     help='turn on testing mode')
@@ -60,13 +60,16 @@ parser.add_argument('--epochs', type=int, default=50, metavar='N',
                     help='number of epochs to train')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='batch size during training')
-# transfer learning settings
+# transfer learning and visualization settings
 parser.add_argument('--standard-rating', action='store_true', default=False,
                     help='if True, maps all ratings to standard 1, 2, 3.4, 5 before training')
 parser.add_argument('--transfer', action='store_true', default=False,
                     help='if True, load a pretrained model instead of training')
 parser.add_argument('--model-pos', default='', 
-                    help="where to load the transferred model's state")
+                    help="where to load the transferred model's state, will use current \
+                    res_dir's model if not specified")
+parser.add_argument('--visualize', action='store_true', default=False,
+                    help='if True, load a pretrained model and do visualization exps')
 # sparsity experiment settings
 parser.add_argument('--ratio', type=float, default=1.0,
                     help="For ml_100k, if ratio < 1, sort train data by timestamp and\
@@ -102,6 +105,8 @@ if args.testing:
 else:
     val_test_appendix = 'valmode'
 args.res_dir = os.path.join(args.file_dir, 'results/{}{}_{}'.format(args.data_name, args.save_appendix, val_test_appendix))
+if args.model_pos == '':
+    args.model_pos = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(args.epochs))
 if args.transfer:
     args.res_dir += '_transfer'
 if not os.path.exists(args.res_dir):
@@ -119,14 +124,14 @@ if not args.keep_old:
     # backup current main.py, model.py files
     copy('Main.py', args.res_dir)
     copy('util_functions.py', args.res_dir)
-    copy('PyG_GNN/models.py', args.res_dir)
-    copy('PyG_GNN/train_eval.py', args.res_dir)
+    copy('models.py', args.res_dir)
+    copy('train_eval.py', args.res_dir)
     if args.transfer: copy(args.model_pos, args.res_dir)
-    # save command line input
-    cmd_input = 'python ' + ' '.join(sys.argv)
-    with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'w') as f:
-        f.write(cmd_input)
-    print('Command line input: ' + cmd_input + ' is saved.')
+# save command line input
+cmd_input = 'python ' + ' '.join(sys.argv)
+with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'a') as f:
+    f.write(cmd_input)
+print('Command line input: ' + cmd_input + ' is saved.')
 
 
 if args.data_name == 'ml_1m' or args.data_name == 'ml_10m':
@@ -242,9 +247,10 @@ model = DGCNN_RS(train_graphs,
                  num_bases=4, 
                  regression=True)
 
-with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'a') as f:
-    f.write(str(model.k))
-    print('k is saved.')
+if not args.transfer:
+    with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'a') as f:
+        f.write(' --k ' + str(model.k) + '\n')
+        print('k is saved.')
 
 def logger(info, model, optimizer):
     epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
@@ -278,6 +284,7 @@ else:
         rmse = test_once(test_graphs, model, args.batch_size, logger)
         print('Transfer learning rmse is: {:.4f}'.format(rmse))
     elif args.visualize:
+        visualize(model, test_graphs, args.res_dir, args.data_name, class_values)
 
 
 

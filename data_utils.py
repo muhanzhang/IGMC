@@ -71,9 +71,9 @@ def download_dataset(dataset, files, data_dir):
         print('Downloading %s dataset' % dataset)
 
         if dataset in ['ml_100k', 'ml_1m']:
-            target_dir = 'data/' + dataset.replace('_', '-')
+            target_dir = 'raw_data/' + dataset.replace('_', '-')
         elif dataset == 'ml_10m':
-            target_dir = 'data/' + 'ml-10M100K'
+            target_dir = 'raw_data/' + 'ml-10M100K'
         else:
             raise ValueError('Invalid dataset option %s' % dataset)
 

@@ -7,3 +7,4 @@ results/
 software/
 PyG_GNN/
 data/
+plot_figure.py
