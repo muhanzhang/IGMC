@@ -13,22 +13,14 @@ Install [PyTorch](https://pytorch.org/) >= 1.0.0
 
 Install [PyTorch_Geometric](https://rusty1s.github.io/pytorch_geometric/build/html/notes/installation.html)
 
-Type
-
-    bash ./install.sh
-
-
-
 Usages
 ------
 
-Type "python Main.py" to have a try of SEAL on the USAir network.
+To train and test on Flixster, type:
 
-Type:
+    python Main.py --data-name flixster --hop 1 --epochs 40 --testing
 
-    python Main.py --data-name NS --test-ratio 0.5 --hop 'auto' --use-embedding
-
-to run SEAL on the NS network with 50% observed links randomly removed as testing links, hop number set automatically from {1, 2}, and node2vec embeddings included.
+The results will be saved in "results/flixster\_testmode/". Change _flixster_ to _douban_, _yahoo\_music_ to do the same experiments on Douban and MovieLens datasets, respectively. Delete _--testing_ to evaluate on validation set to do hyperparameter tuning.
 
 Type:
 
