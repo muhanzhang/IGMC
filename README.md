@@ -4,14 +4,22 @@ IGPL -- Inductive Graph Pattern Learning from Recommender Systems
 About
 -----
 
-IGPL is an inductive learning framework that learns graph structure features for recommender systems. Graph structure features are some repeated structure patterns related to ratings. For example, if a user $u_0$ likes an item $v_0$, we may expect to see very often that $v_0$ is also liked by some other user $u_1$ who shares a similar taste to $u_0$. By similar taste, we mean $u_1$ and $u_0$ have together both liked some other item $v_1$. In the bipartite graph, such a pattern is realized as a _like_ path connecting $(u_0,v_1,u_1,v_0)$. If there are many such paths between $u_0$ and $v_0$, we may infer that $u_0$ is highly likely to like $v_0$. Such paths are exactly graph structure features useful for rating prediction. IGPL learns general graph structure features from local subgraphs around ratings based on a graph neural network (GNN). Different from transductive matrix factorization methods, the model learned by IGPL is inductive, meaning it can be applied to unseen users and items and can be transferred to new tasks. IGPL has achieved new state-of-the-art results on several benchmark datasets, outperforming other GNN approaches such as GC-MC and sRGCNN.
+IGPL is an inductive learning framework for recommender systems which uses graph structure features to make predictions. Graph structure features are some structure patterns related to ratings. For example, if a user $u_0$ likes an item $v_0$, we may expect to see very often that $v_0$ is also liked by some other user $u_1$ who shares a similar taste to $u_0$. By similar taste, we mean $u_1$ and $u_0$ have together both liked some other item $v_1$. In the bipartite graph built from the rating matrix, such a pattern is realized as a _like_ path connecting $(u_0,v_1,u_1,v_0)$. If there are many such paths between $u_0$ and $v_0$, we may infer that $u_0$ is highly likely to like $v_0$. Such paths are exactly some graph structure features useful for rating prediction. 
 
-Installation
+Instead of using predefined graph structure features, IGPL learns general graph structure features from local enclosing subgraphs around ratings based on a graph neural network (GNN). In other words, these local enclosing subgraphs around ratings are used as these ratings' characteristic graph representations which are directly fed to a GNN to make predictions. This idea has been successfully used in [link prediction](https://github.com/muhanzhang/SEAL). This work proves its effectiveness for recommender systems.
+
+IGPL is completely different from transductive matrix factorization methods, where the learned latent features are associated with specific users/items and thus not generalizable to unseen ones. The model learned by IGPL is inductive, meaning that it can be applied to unseen users and items and can be transferred to new tasks. IGPL achieves state-of-the-art results on several benchmark datasets, outperforming other GNN approaches such as GC-MC and sRGCNN.
+
+Requirements
 ------------
+
+Tested with Python 3.6, Pytorch 1.0.0.
 
 Install [PyTorch](https://pytorch.org/) >= 1.0.0
 
 Install [PyTorch_Geometric](https://rusty1s.github.io/pytorch_geometric/build/html/notes/installation.html)
+
+Other required python libraries: numpy, scipy, pandas, h5py, networkx, tqdm etc.
 
 Usages
 ------
@@ -20,29 +28,37 @@ To train and test on Flixster, type:
 
     python Main.py --data-name flixster --hop 1 --epochs 40 --testing
 
-The results will be saved in "results/flixster\_testmode/". Change _flixster_ to _douban_, _yahoo\_music_ to do the same experiments on Douban and MovieLens datasets, respectively. Delete _--testing_ to evaluate on validation set to do hyperparameter tuning.
+The results will be saved in "results/flixster\_testmode/". The processed enclosing subgraphs will be saved in "data/flixster/testmode/". Change *flixster* to *douban* or *yahoo\_music* to do the same experiments on Douban and YahooMusic datasets, respectively. Delete _--testing_ to evaluate on validation set to do hyperparameter tuning.
 
-Type:
+To train and test on MovieLens, type:
 
-    python Main.py --data-name PPI_subgraph --test-ratio 0.5 --use-embedding --use-attribute
+    python Main.py --data-name ml_100k --save-appendix _mnph100 --data-appendix _mnph100 --max-nodes-per-hop 100 --hop 1 --epochs 60 --testing
 
-to run SEAL on PPI_subgraph with node attributes included. The node attributes are assumed to be saved in the  _group_ of the _.mat_ file.
+The results will be saved in "results/ml\_100k\_mnph100\_testmode/". The processed enclosing subgraphs will be saved in "data/ml\_100k\_mnph100/testmode/". The *--max-nodes-per-hop* limits the number of maximum users or items to include in each hop when constructing an enclosing subgraph, which is based on random sampling. It effectively reduces the enclosing subgraph sizes for dense graphs such as MovieLens.
 
-Type:
+To repeat the transfer learning experiment in the paper (transfer a model pretrained on Flixster to Douban), first type the following:
 
-    python Main.py --train-name PB_train.txt --test-name PB_test.txt --hop 1
+    python Main.py --data-name flixster --save-appendix _stdrating --data-appendix _stdrating --hop 1 --epochs 40 --testing --standard-rating 
 
-to run SEAL on a custom splitting of train and test links, where each row of "PB_train.txt" is an observed training link, each row of "PB_test.txt" is an unobserved testing link. Note that links in "PB_train.txt" will be used to construct the observed network, yet it is not necessary to train SEAL on all links in "PB_train.txt" especially when the number of observed links is huge. To set a maximum number of links to train on, append "--max-train-num 10000" for example.
+to train a model on Flixster by rounding Flixster's rating types to standard rating types 1, 2, 3, 4, 5. Then type:
 
-Sometimes even extracting 1-hop enclosing subgraphs for some links leads to unaffordable number of nodes in the enclosing subgraphs, especially in Twitter-type networks where a hub node can have millions of followers. To deal with this case, append "--max-nodes-per-hop 100" for example to restrict the number of nodes in each hop to be less than 100 using random sampling. SEAL still shows excellent performance.
+    python Main.py --data-name douban --hop 1 --epochs 40 --testing --transfer --model-pos results/flixster_stdrating_testmode/model_checkpoint40.pth --k 41
 
+to apply the pretrained model to Douban. 
 
-Requirements
-------------
+To repeat the sparsity experiment in the paper (sparsify MovieLens' rating matrix to keep 20% ratings only), type the following:
 
-Tested with Python 3.6, Pytorch 1.0.0.
+    python Main.py --data-name ml_100k --save-appendix _ratio20_mnph100 --data-appendix _ratio20_mnph100 --ratio 0.2 --max-nodes-per-hop 100 --hop 1 --epochs 60 --testing
 
-Required python libraries: numpy, scipy, pandas, h5py, networkx, tqdm etc.
+Then modify _--ratio 0.2_ to change the sparsity ratios.
+
+After training a model on a dataset, to visualize the testing enclosing subgraphs with the highest and lowest predicted ratings, type the following (we use Flixster as an example):
+
+    python Main.py --data-name flixster --hop 1 --epochs 40 --testing --visualize --keep-old
+
+It will load "results/flixster\_testmode/model\_checkpoint40.pth" and save the visualization in "results/flixster\_testmode/visualization_flixster.pdf".
+
+Check "Main.py" and "train\_eval.py" for more options and functions to play with. Check "models.py" to see the used graph neural network.
 
 Reference
 ---------

@@ -62,11 +62,11 @@ parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='batch size during training')
 # transfer learning and visualization settings
 parser.add_argument('--standard-rating', action='store_true', default=False,
-                    help='if True, maps all ratings to standard 1, 2, 3.4, 5 before training')
+                    help='if True, maps all ratings to standard 1, 2, 3, 4, 5 before training')
 parser.add_argument('--transfer', action='store_true', default=False,
                     help='if True, load a pretrained model instead of training')
 parser.add_argument('--model-pos', default='', 
-                    help="where to load the transferred model's state, will use current \
+                    help="where to load the pretrained model's state, will use current \
                     res_dir's model if not specified")
 parser.add_argument('--visualize', action='store_true', default=False,
                     help='if True, load a pretrained model and do visualization exps')
