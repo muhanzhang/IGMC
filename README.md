@@ -1,4 +1,4 @@
-IGPL -- Inductive Graph Pattern Learning from Recommender Systems
+IGPL -- Inductive Graph Pattern Learning for Recommender Systems
 ===============================================================================
 
 About
@@ -64,6 +64,13 @@ Reference
 ---------
 
 If you find the code useful, please cite our paper.
+
+    @article{zhang2019inductive,
+      title={Inductive Graph Pattern Learning for Recommender Systems Based on a Graph Neural Network},
+      author={Zhang, Muhan and Chen, Yixin},
+      journal={arXiv preprint arXiv:1904.12058},
+      year={2019}
+    }
 
 Muhan Zhang, Washington University in St. Louis
 muhan@wustl.edu
