@@ -10,6 +10,9 @@ Instead of using predefined graph structure features, IGPL learns general graph 
 
 IGPL is completely different from transductive matrix factorization methods, where the learned latent features are associated with specific users/items and thus not generalizable to unseen ones. The model learned by IGPL is inductive, meaning that it can be applied to unseen users and items and can be transferred to new tasks. IGPL achieves state-of-the-art results on several benchmark datasets, outperforming other GNN approaches such as GC-MC and sRGCNN.
 
+For more information, please check our paper:
+> M. Zhang and Y. Chen, Inductive Graph Pattern Learning for Recommender Systems Based on a Graph Neural Network. [\[Preprint\]](https://arxiv.org/pdf/1904.12058.pdf)
+
 Requirements
 ------------
 
