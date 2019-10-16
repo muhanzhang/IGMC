@@ -1,7 +1,7 @@
 IGMC -- Inductive Graph-based Matrix Completion
 ===============================================================================
 
-![alt text](https://github.com/muhanzhang/IGMC/overall2.pdf "Illustration of IGMC")
+![alt text](overall2.pdf "Illustration of IGMC")
 
 About
 -----
@@ -35,7 +35,7 @@ It will display the training and testing results over each epoch. To get the fin
     
     python Main.py --data-name flixster --epochs 40 --testing --ensemble
 
-The results will be saved in "results/flixster\_testmode/". The processed enclosing subgraphs will be saved in "data/flixster/testmode/". Change *flixster* to *douban* or *yahoo\_music* to do the same experiments on Douban and YahooMusic datasets, respectively. Delete _--testing_ to evaluate on a validation set to do hyperparameter tuning.
+The results will be saved in "results/flixster\_testmode/". The processed enclosing subgraphs will be saved in "data/flixster/testmode/". Change flixster to douban or yahoo\_music to do the same experiments on Douban and YahooMusic datasets, respectively. Delete --testing to evaluate on a validation set to do hyperparameter tuning.
 
 ### MovieLens-100K and MovieLens-1M
 
@@ -67,7 +67,7 @@ To repeat the transfer learning experiment in the paper (transfer the model trai
 
     ./run_transfer_exps.sh DATANAME
 
-Replace *DATANAME* with *flixster*, *douban* and *yahoo_music* to transfer to each dataset. The results will be attached to each dataset's original "log.txt" file.
+Replace DATANAME with flixster, douban and yahoo_music to transfer to each dataset. The results will be attached to each dataset's original "log.txt" file.
 
 ### Visualization
 
