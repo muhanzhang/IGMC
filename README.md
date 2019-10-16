@@ -1,7 +1,7 @@
 IGMC -- Inductive Graph-based Matrix Completion
 ===============================================================================
 
-![alt text](https://github.com/muhanzhang/IGMC/raw/master/overall2.pdf "Illustration of IGMC")
+![alt text](https://github.com/muhanzhang/IGMC/raw/master/overall2.png "Illustration of IGMC")
 
 About
 -----
