@@ -8,8 +8,6 @@ import os
 import h5py
 import pandas as pd
 import pdb
-
-
 from data_utils import load_data, map_data, download_dataset
 
 
@@ -116,7 +114,7 @@ def sparse_to_tuple(sparse_mx):
     return coords, values, shape
 
 
-def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=None, datasplit_from_file=False, verbose=True, rating_map=None):
+def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=None, datasplit_from_file=False, verbose=True, rating_map=None, post_rating_map=None, ratio=1.0):
     """
     Splits data set into train/val/test sets from full bipartite adjacency matrix. Shuffling of dataset is done in
     load_data function.
@@ -145,7 +143,6 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
     if rating_map is not None:
         for i, x in enumerate(ratings):
             ratings[i] = rating_map[x]
-        pdb.set_trace()
 
     neutral_rating = -1
 
@@ -168,11 +165,11 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
 
     idx_nonzero = np.array([u * num_items + v for u, v in pairs_nonzero])
 
-    train_idx = idx_nonzero[0:num_train]
+    train_idx = idx_nonzero[0:int(num_train*ratio)]
     val_idx = idx_nonzero[num_train:num_train + num_val]
     test_idx = idx_nonzero[num_train + num_val:]
 
-    train_pairs_idx = pairs_nonzero[0:num_train]
+    train_pairs_idx = pairs_nonzero[0:int(num_train*ratio)]
     val_pairs_idx = pairs_nonzero[num_train:num_train + num_val]
     test_pairs_idx = pairs_nonzero[num_train + num_val:]
 
@@ -192,20 +189,25 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
         # for adjacency matrix construction
         train_idx = np.hstack([train_idx, val_idx])
 
+    class_values = np.sort(np.unique(ratings))
+
     # make training adjacency matrix
     rating_mx_train = np.zeros(num_users * num_items, dtype=np.float32)
-    rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+    if post_rating_map is None:
+        rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+    else:
+        rating_mx_train[train_idx] = np.array([post_rating_map[r] for r in class_values[labels[train_idx]]]) + 1.
     rating_mx_train = sp.csr_matrix(rating_mx_train.reshape(num_users, num_items))
-
-    class_values = np.sort(np.unique(ratings))
 
     return u_features, v_features, rating_mx_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
 
-def load_data_monti(dataset, testing=False, rating_map=None):
+def load_data_monti(dataset, testing=False, rating_map=None, post_rating_map=None):
     """
     Loads data from Monti et al. paper.
+    if rating_map is given, apply this map to the original rating matrix
+    if post_rating_map is given, apply this map to the processed rating_mx_train without affecting the labels
     """
 
     path_dataset = 'raw_data/' + dataset + '/training_test_dataset.mat'
@@ -225,9 +227,6 @@ def load_data_monti(dataset, testing=False, rating_map=None):
         Wcol = load_matlab_file(path_dataset, 'W_movies')
         u_features = Wrow
         v_features = Wcol
-        # print(num_items, v_features.shape)
-        # v_features = np.eye(num_items)
-
     elif dataset == 'douban':
         Wrow = load_matlab_file(path_dataset, 'W_users')
         u_features = Wrow
@@ -312,13 +311,18 @@ def load_data_monti(dataset, testing=False, rating_map=None):
         # for adjacency matrix construction
         train_idx = np.hstack([train_idx, val_idx])
 
+    class_values = np.sort(np.unique(ratings))
+
     # make training adjacency matrix
     rating_mx_train = np.zeros(num_users * num_items, dtype=np.float32)
     '''Note here rating matrix elements' values + 1 !!!'''
-    rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+    if post_rating_map is None:
+        rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+    else:
+        rating_mx_train[train_idx] = np.array([post_rating_map[r] for r in class_values[labels[train_idx]]]) + 1.
+
     rating_mx_train = sp.csr_matrix(rating_mx_train.reshape(num_users, num_items))
 
-    class_values = np.sort(np.unique(ratings))
 
     if u_features is not None:
         u_features = sp.csr_matrix(u_features)
@@ -332,7 +336,7 @@ def load_data_monti(dataset, testing=False, rating_map=None):
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
 
-def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ratio=1.0):
+def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, post_rating_map=None, ratio=1.0):
     """
     Loads official train/test split and uses 10% of training samples for validaiton
     For each split computes 1-of-num_classes labels. Also computes training
@@ -456,13 +460,16 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, ra
         train_labels = np.hstack([train_labels, val_labels])
         # for adjacency matrix construction
         train_idx = np.hstack([train_idx, val_idx])
+    
+    class_values = np.sort(np.unique(ratings))
 
     # make training adjacency matrix
     rating_mx_train = np.zeros(num_users * num_items, dtype=np.float32)
-    rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+    if post_rating_map is None:
+        rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+    else:
+        rating_mx_train[train_idx] = np.array([post_rating_map[r] for r in class_values[labels[train_idx]]]) + 1.
     rating_mx_train = sp.csr_matrix(rating_mx_train.reshape(num_users, num_items))
-
-    class_values = np.sort(np.unique(ratings))
 
     if dataset =='ml_100k':
 

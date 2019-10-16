@@ -1,10 +1,8 @@
 *.pyc
 *.swp
 backup/
-*results.txt
-test_scores.txt
 results/
 software/
-PyG_GNN/
 data/
 plot_figure.py
+__pycache__/

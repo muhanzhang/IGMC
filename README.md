@@ -1,22 +1,20 @@
-IGPL -- Inductive Graph Pattern Learning for Recommender Systems
+IGMC -- Inductive Graph-based Matrix Completion
 ===============================================================================
+
+![alt text](https://github.com/muhanzhang/IGMC/overall2.pdf "Illustration of IGMC")
 
 About
 -----
 
-IGPL is an inductive learning framework for recommender systems which uses graph structure features to make predictions. Graph structure features are some structure patterns related to ratings. For example, if a user $u_0$ likes an item $v_0$, we may expect to see very often that $v_0$ is also liked by some other user $u_1$ who shares a similar taste to $u_0$. By similar taste, we mean $u_1$ and $u_0$ have together both liked some other item $v_1$. In the bipartite graph built from the rating matrix, such a pattern is realized as a _like_ path connecting $(u_0,v_1,u_1,v_0)$. If there are many such paths between $u_0$ and $v_0$, we may infer that $u_0$ is highly likely to like $v_0$. Such paths are exactly some graph structure features useful for rating prediction. 
+IGMC is an __inductive__ matrix completion model based on graph neural networks __without__ using any side information. Traditional matrix factorization approaches factorize the (rating) matrix into the product of low-dimensional latent embeddings of rows (users) and columns (items), which are __transductive__ since the learned embeddings cannot generalize to unseen rows/columns or to new matrices. To make matrix completion __inductive__, content (side information), such as user's age or movie's genre, has to be used previously. However, high-quality content is not always available, and can be hard to extract. Under the extreme setting where __not any__ side information is available other than the matrix to complete, can we still learn an inductive matrix completion model? IGMC achieves this by training a graph neural network (GNN) based purely on local subgraphs around (user, item) pairs extracted from the bipartite graph formed by the rating matrix, and maps these subgraphs to their corresponding ratings. It does not rely on any global information specific to the rating matrix or the task, nor does it learn embeddings specific to the observed users/items. Thus, IGMC is a completely inductive model. 
 
-Instead of using predefined graph structure features, IGPL learns general graph structure features from local enclosing subgraphs around ratings based on a graph neural network (GNN). In other words, these local enclosing subgraphs around ratings are used as these ratings' characteristic graph representations which are directly fed to a GNN to make predictions. This idea has been successfully used in [link prediction](https://github.com/muhanzhang/SEAL). This work proves its effectiveness for recommender systems.
-
-IGPL is completely different from transductive matrix factorization methods, where the learned latent features are associated with specific users/items and thus not generalizable to unseen ones. The model learned by IGPL is inductive, meaning that it can be applied to unseen users and items and can be transferred to new tasks. IGPL achieves state-of-the-art results on several benchmark datasets, outperforming other GNN approaches such as GC-MC and sRGCNN.
-
-For more information, please check our paper:
-> M. Zhang and Y. Chen, Inductive Graph Pattern Learning for Recommender Systems Based on a Graph Neural Network. [\[Preprint\]](https://arxiv.org/pdf/1904.12058.pdf)
+Since IGMC is inductive, it can generalize to users/items unseen during the training (given that their interactions exist), and can even __transfer__ to new tasks. Our transfer learning experiments show that a model trained out of the MovieLens dataset can be directly used to predict Douban movie ratings and works surprisingly well. For more information, please check our paper:
+> M. Zhang and Y. Chen, Inductive Matrix Completion Based on Graph Neural Networks. [\[Preprint\]](https://arxiv.org/pdf/1904.12058.pdf)
 
 Requirements
 ------------
 
-Tested with Python 3.6, Pytorch 1.0.0.
+Tested with Python 3.6.8, PyTorch 1.0.0, PyTorch_Geometric 1.1.2.
 
 Install [PyTorch](https://pytorch.org/) >= 1.0.0
 
@@ -27,41 +25,59 @@ Other required python libraries: numpy, scipy, pandas, h5py, networkx, tqdm etc.
 Usages
 ------
 
-To train and test on Flixster, type:
+### Flixster, Douban and YahooMusic
 
-    python Main.py --data-name flixster --hop 1 --epochs 40 --testing
+To train on Flixster, type:
 
-The results will be saved in "results/flixster\_testmode/". The processed enclosing subgraphs will be saved in "data/flixster/testmode/". Change *flixster* to *douban* or *yahoo\_music* to do the same experiments on Douban and YahooMusic datasets, respectively. Delete _--testing_ to evaluate on validation set to do hyperparameter tuning.
+    python Main.py --data-name flixster --epochs 40 --testing
 
-To train and test on MovieLens, type:
+It will display the training and testing results over each epoch. To get the final test result, attach an --ensemble:
+    
+    python Main.py --data-name flixster --epochs 40 --testing --ensemble
 
-    python Main.py --data-name ml_100k --save-appendix _mnph100 --data-appendix _mnph100 --max-nodes-per-hop 100 --hop 1 --epochs 60 --testing
+The results will be saved in "results/flixster\_testmode/". The processed enclosing subgraphs will be saved in "data/flixster/testmode/". Change *flixster* to *douban* or *yahoo\_music* to do the same experiments on Douban and YahooMusic datasets, respectively. Delete _--testing_ to evaluate on a validation set to do hyperparameter tuning.
 
-The results will be saved in "results/ml\_100k\_mnph100\_testmode/". The processed enclosing subgraphs will be saved in "data/ml\_100k\_mnph100/testmode/". The *--max-nodes-per-hop* limits the number of maximum users or items to include in each hop when constructing an enclosing subgraph, which is based on random sampling. It effectively reduces the enclosing subgraph sizes for dense graphs such as MovieLens.
+### MovieLens-100K and MovieLens-1M
 
-To repeat the transfer learning experiment in the paper (transfer a model pretrained on Flixster to Douban), first type the following:
+To train on MovieLens-100K, type:
 
-    python Main.py --data-name flixster --save-appendix _stdrating --data-appendix _stdrating --hop 1 --epochs 40 --testing --standard-rating 
+    python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 80 --max-nodes-per-hop 200 --testing
 
-to train a model on Flixster by rounding Flixster's rating types to standard rating types 1, 2, 3, 4, 5. Then type:
+where the --max-nodes-per-hop argument specifies the maximum number of neighbors to sample for each node during the enclosing subgraph extraction, whose purpose is to limit the subgraph size to accomodate large datasets. 
 
-    python Main.py --data-name douban --hop 1 --epochs 40 --testing --transfer --model-pos results/flixster_stdrating_testmode/model_checkpoint40.pth --k 41
+Attach --ensemble and run again to get the final ensemble test results. The results will be saved in "results/ml\_100k\_mnph200\_testmode/". The processed enclosing subgraphs will be saved in "data/ml\_100k\_mnph200/testmode/". 
 
-to apply the pretrained model to Douban. 
+To train on MovieLens-1M, type:
+    
+    python Main.py --data-name ml_1m --save-appendix _mnhp100 --data-appendix _mnph100 --max-nodes-per-hop 100 --testing --epochs 40 --save-interval 5 --adj-dropout 0 --lr-decay-step-size 20 --dynamic-dataset
 
-To repeat the sparsity experiment in the paper (sparsify MovieLens' rating matrix to keep 20% ratings only), type the following:
+where the --dynamic-dataset makes the enclosing subgraphs dynamically generated on the fly rather than generated in a preprocessing step and saved in disk, whose purpose is to reduce memory consumption. Similarly, attach --ensemble to get the ensemble test results.
 
-    python Main.py --data-name ml_100k --save-appendix _ratio20_mnph100 --data-appendix _ratio20_mnph100 --ratio 0.2 --max-nodes-per-hop 100 --hop 1 --epochs 60 --testing
+### Sparse rating matrix
 
-Then modify _--ratio 0.2_ to change the sparsity ratios.
+To repeat the sparsity experiment in the paper (sparsify MovieLens-1M' rating matrix to keep 20% ratings only), type the following:
+
+    python Main.py --data-name ml_1m --save-appendix _mnhp100_ratio02 --ratio 0.2 --data-appendix _mnph100 --max-nodes-per-hop 100 --testing --epochs 40 --save-interval 5 --adj-dropout 0 --lr-decay-step-size 20 --dynamic-dataset 
+
+Modify --ratio 0.2 to change the sparsity ratios. Attach --ensemble and run again to get the ensemble test results.
+
+### Transfer learning
+
+To repeat the transfer learning experiment in the paper (transfer the model trained previously on MovieLens-100K to Flixster, Douban, and YahooMusic), use the provided script by typing:
+
+    ./run_transfer_exps.sh DATANAME
+
+Replace *DATANAME* with *flixster*, *douban* and *yahoo_music* to transfer to each dataset. The results will be attached to each dataset's original "log.txt" file.
+
+### Visualization
 
 After training a model on a dataset, to visualize the testing enclosing subgraphs with the highest and lowest predicted ratings, type the following (we use Flixster as an example):
 
-    python Main.py --data-name flixster --hop 1 --epochs 40 --testing --visualize --keep-old
+    python Main.py --data-name flixster --epochs 40 --testing --visualize
 
-It will load "results/flixster\_testmode/model\_checkpoint40.pth" and save the visualization in "results/flixster\_testmode/visualization_flixster.pdf".
+It will load "results/flixster\_testmode/model\_checkpoint40.pth" and save the visualization in "results/flixster\_testmode/visualization_flixster_prediction.pdf".
 
-Check "Main.py" and "train\_eval.py" for more options and functions to play with. Check "models.py" to see the used graph neural network.
+Check "Main.py" and "train\_eval.py" for more options to play with. Check "models.py" for the graph neural network used.
 
 Reference
 ---------
@@ -69,12 +85,14 @@ Reference
 If you find the code useful, please cite our paper.
 
     @article{zhang2019inductive,
-      title={Inductive Graph Pattern Learning for Recommender Systems Based on a Graph Neural Network},
+      title={Inductive Matrix Completion Based on Graph Neural Networks},
       author={Zhang, Muhan and Chen, Yixin},
       journal={arXiv preprint arXiv:1904.12058},
       year={2019}
     }
 
+Check out another successful application of this idea on [link prediction](https://github.com/muhanzhang/SEAL). 
+
 Muhan Zhang, Washington University in St. Louis
 muhan@wustl.edu
-4/26/2019
+10/13/2019
