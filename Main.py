@@ -22,6 +22,9 @@ parser.add_argument('--testing', action='store_true', default=False,
                     help='if set, use testing mode which splits all ratings into train/test;\
                     otherwise, use validation model which splits all ratings into \
                     train/val/test and evaluate on val only')
+parser.add_argument('--no-train', action='store_true', default=False,
+                    help='if set, skip the training and directly perform the \
+                    transfer/ensemble/visualization')
 parser.add_argument('--debug', action='store_true', default=False,
                     help='turn on debugging mode which uses a small number of data')
 parser.add_argument('--data-name', default='ml_100k', help='dataset name')
@@ -76,7 +79,7 @@ parser.add_argument('--ARR', type=float, default=0.001,
                     help='The adjacenct rating regularizer. If not 0, regularize the \
                     differences between graph convolution parameters W associated with\
                     adjacent ratings')
-# transfer learning, ensemble learning, visualization settings
+# transfer learning, ensemble, and visualization settings
 parser.add_argument('--transfer', default='',
                     help='if not empty, load the pretrained models in this path')
 parser.add_argument('--num-relations', type=int, default=5,
@@ -349,7 +352,7 @@ def logger(info, model, optimizer):
         if optimizer is not None:
             torch.save(optimizer.state_dict(), optimizer_name)
 
-if not args.transfer and not args.visualize and not args.ensemble:
+if not args.no_train:
     train_multiple_epochs(train_graphs,
                           test_graphs,
                           model,
@@ -363,40 +366,40 @@ if not args.transfer and not args.visualize and not args.ensemble:
                           logger=logger, 
                           continue_from=args.continue_from, 
                           res_dir=args.res_dir)
-else:
-    if args.visualize:
-        model.load_state_dict(torch.load(args.model_pos))
-        visualize(model, test_graphs, args.res_dir, args.data_name, class_values, sort_by='prediction')
-        if args.transfer:
-            rmse = test_once(test_graphs, model, args.batch_size, logger)
-            print('Transfer learning rmse is: {:.6f}'.format(rmse))
-    else:
-        if args.ensemble:
-            if args.data_name == 'ml_1m':
-                start_epoch, end_epoch, interval = args.epochs-15, args.epochs, 5
-            else: 
-                start_epoch, end_epoch, interval = args.epochs-30, args.epochs, 10
-            if args.transfer:
-                checkpoints = [os.path.join(args.transfer, 'model_checkpoint%d.pth' %x) for x in range(start_epoch, end_epoch+1, interval)]
-                epoch_info = 'transfer {}, ensemble of range({}, {}, {})'.format(args.transfer, start_epoch, end_epoch, interval)
-            else:
-                checkpoints = [os.path.join(args.res_dir, 'model_checkpoint%d.pth' %x) for x in range(start_epoch, end_epoch+1, interval)]
-                epoch_info = 'ensemble of range({}, {}, {})'.format(start_epoch, end_epoch, interval)
-            rmse = test_once(test_graphs, model, args.batch_size, logger=None, ensemble=True, checkpoints=checkpoints)
-            print('Ensemble test rmse is: {:.6f}'.format(rmse))
-        else:
-            if args.transfer:
-                model.load_state_dict(torch.load(args.model_pos))
-                rmse = test_once(test_graphs, model, args.batch_size, logger=None)
-                epoch_info = 'transfer {}, epoch {}'.format(args.transfer, args.epoch)
-            print('Test rmse is: {:.6f}'.format(rmse))
 
-        eval_info = {
-            'epoch': epoch_info,
-            'train_loss': 0,
-            'test_rmse': rmse,
-        }
-        logger(eval_info, None, None)
+if args.visualize:
+    model.load_state_dict(torch.load(args.model_pos))
+    visualize(model, test_graphs, args.res_dir, args.data_name, class_values, sort_by='prediction')
+    if args.transfer:
+        rmse = test_once(test_graphs, model, args.batch_size, logger)
+        print('Transfer learning rmse is: {:.6f}'.format(rmse))
+else:
+    if args.ensemble:
+        if args.data_name == 'ml_1m':
+            start_epoch, end_epoch, interval = args.epochs-15, args.epochs, 5
+        else: 
+            start_epoch, end_epoch, interval = args.epochs-30, args.epochs, 10
+        if args.transfer:
+            checkpoints = [os.path.join(args.transfer, 'model_checkpoint%d.pth' %x) for x in range(start_epoch, end_epoch+1, interval)]
+            epoch_info = 'transfer {}, ensemble of range({}, {}, {})'.format(args.transfer, start_epoch, end_epoch, interval)
+        else:
+            checkpoints = [os.path.join(args.res_dir, 'model_checkpoint%d.pth' %x) for x in range(start_epoch, end_epoch+1, interval)]
+            epoch_info = 'ensemble of range({}, {}, {})'.format(start_epoch, end_epoch, interval)
+        rmse = test_once(test_graphs, model, args.batch_size, logger=None, ensemble=True, checkpoints=checkpoints)
+        print('Ensemble test rmse is: {:.6f}'.format(rmse))
+    else:
+        if args.transfer:
+            model.load_state_dict(torch.load(args.model_pos))
+            rmse = test_once(test_graphs, model, args.batch_size, logger=None)
+            epoch_info = 'transfer {}, epoch {}'.format(args.transfer, args.epoch)
+        print('Test rmse is: {:.6f}'.format(rmse))
+
+    eval_info = {
+        'epoch': epoch_info,
+        'train_loss': 0,
+        'test_rmse': rmse,
+    }
+    logger(eval_info, None, None)
 
 
 
