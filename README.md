@@ -37,17 +37,15 @@ The results will be saved in "results/flixster\_testmode/". The processed enclos
 
 To train on MovieLens-100K, type:
 
-    python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 80 --max-nodes-per-hop 200 --testing --ensemble
+    python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 80 --max-nodes-per-hop 200 --testing --ensemble --dynamic-dataset
 
-where the --max-nodes-per-hop argument specifies the maximum number of neighbors to sample for each node during the enclosing subgraph extraction, whose purpose is to limit the subgraph size to accomodate large datasets. 
+where the --max-nodes-per-hop argument specifies the maximum number of neighbors to sample for each node during the enclosing subgraph extraction, whose purpose is to limit the subgraph size to accomodate large datasets. The --dynamic-dataset option makes the enclosing subgraphs dynamically generated rather than generated in a preprocessing step and saved in disk, whose purpose is to reduce memory consumption. However, you may remove the option to generate a static dataset for future reuses.
 
-The results will be saved in "results/ml\_100k\_mnph200\_testmode/". The processed enclosing subgraphs will be saved in "data/ml\_100k\_mnph200/testmode/". 
+The results will be saved in "results/ml\_100k\_mnph200\_testmode/". The processed enclosing subgraphs will be saved in "data/ml\_100k\_mnph200/testmode/" if you disable --dynamic-dataset. 
 
 To train on MovieLens-1M, type:
     
     python Main.py --data-name ml_1m --save-appendix _mnhp100 --data-appendix _mnph100 --max-nodes-per-hop 100 --testing --epochs 40 --save-interval 5 --adj-dropout 0 --lr-decay-step-size 20 --ensemble --dynamic-dataset
-
-where the --dynamic-dataset makes the enclosing subgraphs dynamically generated on the fly rather than generated in a preprocessing step and saved in disk, whose purpose is to reduce memory consumption.
 
 ### Sparse rating matrix
 
