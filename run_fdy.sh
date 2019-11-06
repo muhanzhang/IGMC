@@ -9,6 +9,6 @@
 data=${1}
 for i in $(seq 1 5)  # to run with different seeds
 do
-  python Main.py --data-name ${data} --save-appendix _s${i} --hop 1 --epochs 40 --testing --reg-W-diff 0.001 --seed ${i} --ensemble
+  python Main.py --data-name ${data} --save-appendix _s${i} --hop 1 --epochs 40 --testing --seed ${i} --ensemble
 done
 
