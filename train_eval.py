@@ -46,6 +46,7 @@ def train_multiple_epochs(train_dataset,
         model.load_state_dict(torch.load(os.path.join(res_dir, 'model_checkpoint{}.pth'.format(continue_from))))
         optimizer.load_state_dict(torch.load(os.path.join(res_dir, 'optimizer_checkpoint{}.pth'.format(continue_from))))
         start_epoch = continue_from + 1
+        epochs -= continue_from
 
     if torch.cuda.is_available():
         torch.cuda.synchronize()
