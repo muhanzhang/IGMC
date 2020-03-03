@@ -14,9 +14,9 @@ Since IGMC is inductive, it can generalize to users/items unseen during the trai
 Requirements
 ------------
 
-Tested with Python 3.6.8, PyTorch 1.0.0, PyTorch_Geometric 1.1.2.
+Latest tested combination: Python 3.8.1 + PyTorch 1.4.0 + PyTorch_Geometric 1.4.2.
 
-Install [PyTorch](https://pytorch.org/) >= 1.0.0
+Install [PyTorch](https://pytorch.org/)
 
 Install [PyTorch_Geometric](https://rusty1s.github.io/pytorch_geometric/build/html/notes/installation.html)
 
@@ -39,7 +39,7 @@ To train on MovieLens-100K, type:
 
     python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 80 --max-nodes-per-hop 200 --testing --ensemble --dynamic-dataset
 
-where the --max-nodes-per-hop argument specifies the maximum number of neighbors to sample for each node during the enclosing subgraph extraction, whose purpose is to limit the subgraph size to accomodate large datasets. The --dynamic-dataset option makes the enclosing subgraphs dynamically generated rather than generated in a preprocessing step and saved in disk, whose purpose is to reduce memory consumption. However, you may remove the option to generate a static dataset for future reuses.
+where the --max-nodes-per-hop argument specifies the maximum number of neighbors to sample for each node during the enclosing subgraph extraction, whose purpose is to limit the subgraph size to accomodate large datasets. The --dynamic-dataset option makes the enclosing subgraphs dynamically generated rather than generated in a preprocessing step and saved in disk, whose purpose is to reduce memory consumption. However, you may remove the option to generate a static dataset for future reuses. The default batch size is 50, if a batch cannot fit into your GPU memory, you can reduce batch size by appending "--batch-size 25" to the above command.
 
 The results will be saved in "results/ml\_100k\_mnph200\_testmode/". The processed enclosing subgraphs will be saved in "data/ml\_100k\_mnph200/testmode/" if you disable --dynamic-dataset. 
 

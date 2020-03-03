@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import sys, copy, math, time, pdb
+import sys, copy, math, time, pdb, warnings, traceback
 import pickle
 import scipy.io as sio
 import scipy.sparse as ssp
@@ -15,7 +15,21 @@ from preprocessing import *
 from train_eval import *
 from models import *
 
+import traceback
+import warnings
+import sys
 
+# used to traceback which code cause warnings, can delete
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+
+    log = file if hasattr(file,'write') else sys.stderr
+    traceback.print_stack(file=log)
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+warnings.showwarning = warn_with_traceback
+
+
+# Arguments
 parser = argparse.ArgumentParser(description='Inductive Graph-based Matrix Completion')
 # general settings
 parser.add_argument('--testing', action='store_true', default=False,
