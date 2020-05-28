@@ -137,11 +137,20 @@ if args.standard_rating:
 
 if args.transfer:
     if args.data_name in ['flixster', 'ml_10m']: # original 0.5, 1, ..., 5
-        post_rating_map = {x: int(i // (10 / args.num_relations)) for i, x in enumerate(np.arange(0.5, 5.01, 0.5).tolist())}
+        post_rating_map = {
+            x: int(i // (10 / args.num_relations)) 
+            for i, x in enumerate(np.arange(0.5, 5.01, 0.5).tolist())
+        }
     elif args.data_name == 'yahoo_music':  # original 1, 2, ..., 100
-        post_rating_map = {x: int(i // (100 / args.num_relations)) for i, x in enumerate(np.arange(1, 101).tolist())}
+        post_rating_map = {
+            x: int(i // (100 / args.num_relations)) 
+            for i, x in enumerate(np.arange(1, 101).tolist())
+        }
     else:  # assume other datasets have standard ratings 1, 2, 3, 4, 5
-        post_rating_map = {x: int(i // (5 / args.num_relations)) for i, x in enumerate(np.arange(1, 6).tolist())}
+        post_rating_map = {
+            x: int(i // (5 / args.num_relations)) 
+            for i, x in enumerate(np.arange(1, 6).tolist())
+        }
 
 
 '''
@@ -152,7 +161,11 @@ if args.testing:
     val_test_appendix = 'testmode'
 else:
     val_test_appendix = 'valmode'
-args.res_dir = os.path.join(args.file_dir, 'results/{}{}_{}'.format(args.data_name, args.save_appendix, val_test_appendix))
+args.res_dir = os.path.join(
+    args.file_dir, 'results/{}{}_{}'.format(
+        args.data_name, args.save_appendix, val_test_appendix
+    )
+)
 if args.transfer == '':
     args.model_pos = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(args.epochs))
 else:
@@ -174,28 +187,46 @@ print('Command line input: ' + cmd_input + ' is saved.')
 
 if args.data_name == 'ml_1m' or args.data_name == 'ml_10m':
     if args.use_features:
-        datasplit_path = 'raw_data/' + args.data_name + '/withfeatures_split_seed' + str(args.data_seed) + '.pickle'
+        datasplit_path = (
+            'raw_data/' + args.data_name + '/withfeatures_split_seed' + 
+            str(args.data_seed) + '.pickle'
+        )
     else:
-        datasplit_path = 'raw_data/' + args.data_name + '/split_seed' + str(args.data_seed) + '.pickle'
+        datasplit_path = (
+            'raw_data/' + args.data_name + '/split_seed' + str(args.data_seed) + 
+            '.pickle'
+        )
 elif args.use_features:
     datasplit_path = 'raw_data/' + args.data_name + '/withfeatures.pickle'
 else:
     datasplit_path = 'raw_data/' + args.data_name + '/nofeatures.pickle'
 
-if args.data_name == 'flixster' or args.data_name == 'douban' or args.data_name == 'yahoo_music':
-    u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
-        val_labels, val_u_indices, val_v_indices, test_labels, \
-        test_u_indices, test_v_indices, class_values = load_data_monti(args.data_name, args.testing, rating_map, post_rating_map)
+if args.data_name in ['flixster', 'douban', 'yahoo_music']:
+    (
+        u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices,
+        val_labels, val_u_indices, val_v_indices, test_labels, test_u_indices, 
+        test_v_indices, class_values
+    ) = load_data_monti(args.data_name, args.testing, rating_map, post_rating_map)
 elif args.data_name == 'ml_100k':
-    print("Using official MovieLens dataset split u1.base/u1.test with 20% validation set size...")
-    u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
-        val_labels, val_u_indices, val_v_indices, test_labels, \
-        test_u_indices, test_v_indices, class_values = load_official_trainvaltest_split(args.data_name, args.testing, rating_map, post_rating_map, args.ratio)
+    print("Using official MovieLens dataset split u1.base/u1.test with 20% validation \
+        set size...")
+    (
+        u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices,
+        val_labels, val_u_indices, val_v_indices, test_labels, test_u_indices, 
+        test_v_indices, class_values
+    ) = load_official_trainvaltest_split(
+        args.data_name, args.testing, rating_map, post_rating_map, args.ratio
+    )
 else:
     print("Using random dataset split ...")
-    u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
-        val_labels, val_u_indices, val_v_indices, test_labels, \
-        test_u_indices, test_v_indices, class_values = create_trainvaltest_split(args.data_name, 1234, args.testing, datasplit_path, True, True, rating_map, post_rating_map, args.ratio)
+    (
+        u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices,
+        val_labels, val_u_indices, val_v_indices, test_labels, test_u_indices, 
+        test_v_indices, class_values
+    ) = create_trainvaltest_split(
+        args.data_name, 1234, args.testing, datasplit_path, True, True, rating_map, 
+        post_rating_map, args.ratio
+    )
 
 print('All ratings are:')
 print(class_values)
@@ -205,14 +236,17 @@ Explanations of the above preprocessing:
     They are transformed to rating labels 0, 1, 2... acsendingly.
     Thus, to get the original rating from a rating label, apply: class_values[label]
     Note that train_labels etc. are all rating labels.
-    But the numbers in adj_train are rating labels + 1, why? Because to accomodate neutral ratings 0! Thus, to get any edge label from adj_train, remember to substract 1.
-    If testing=True, adj_train will include both train and val ratings, and all train data will be the combination of train and val.
+    But the numbers in adj_train are rating labels + 1, why? Because to accomodate 
+    neutral ratings 0! Thus, to get any edge label from adj_train, remember to substract 1.
+    If testing=True, adj_train will include both train and val ratings, and all train 
+    data will be the combination of train and val.
 '''
 
 if args.use_features:
     u_features, v_features = u_features.toarray(), v_features.toarray()
     n_features = u_features.shape[1] + v_features.shape[1]
-    print('Number of user features {}, item features {}, total features {}'.format(u_features.shape[1], v_features.shape[1], n_features))
+    print('Number of user features {}, item features {}, total features {}'.format(
+        u_features.shape[1], v_features.shape[1], n_features))
 else:
     u_features, v_features = None, None
     n_features = 0
@@ -231,12 +265,14 @@ if args.max_train_num is not None:  # sample certain number of train
 train_indices = (train_u_indices, train_v_indices)
 val_indices = (val_u_indices, val_v_indices)
 test_indices = (test_u_indices, test_v_indices)
-print('#train: %d, #val: %d, #test: %d' % (len(train_u_indices), len(val_u_indices), len(test_u_indices)))
+print('#train: %d, #val: %d, #test: %d' % (
+    len(train_u_indices), len(val_u_indices), len(test_u_indices)))
 
 
 '''
     Extract enclosing subgraphs to build the train/test or train/val/test graph datasets.
-    (Note that we must extract enclosing subgraphs for testmode and valmode separately, since the adj_train is different.)
+    (Note that we must extract enclosing subgraphs for testmode and valmode separately, 
+    since the adj_train is different.)
 '''
 train_graphs, val_graphs, test_graphs = None, None, None
 data_combo = (args.data_name, args.data_appendix, val_test_appendix)
@@ -251,63 +287,67 @@ if not args.dynamic_dataset: # use preprocessed graph datasets (stored on disk)
             rmtree('data/{}{}/{}/test'.format(*data_combo))
         # extract enclosing subgraphs and build the datasets
         train_graphs, val_graphs, test_graphs = links2subgraphs(
-                adj_train,
-                train_indices, 
-                val_indices, 
-                test_indices,
-                train_labels, 
-                val_labels, 
-                test_labels, 
-                args.hop, 
-                args.sample_ratio, 
-                args.max_nodes_per_hop, 
-                u_features, 
-                v_features, 
-                args.hop*2+1, 
-                class_values, 
-                args.testing)
+            adj_train,
+            train_indices, 
+            val_indices, 
+            test_indices,
+            train_labels, 
+            val_labels, 
+            test_labels, 
+            args.hop, 
+            args.sample_ratio, 
+            args.max_nodes_per_hop, 
+            u_features, 
+            v_features, 
+            args.hop*2+1, 
+            class_values, 
+            args.testing
+        )
     if not args.testing:
         val_graphs = MyDataset(val_graphs, root='data/{}{}/{}/val'.format(*data_combo))
     test_graphs = MyDataset(test_graphs, root='data/{}{}/{}/test'.format(*data_combo))
     train_graphs = MyDataset(train_graphs, root='data/{}{}/{}/train'.format(*data_combo))
 else:  # build dynamic datasets that extract subgraphs on the fly
     train_graphs = MyDynamicDataset(
-                        'data/{}{}/{}/train'.format(*data_combo), 
-                        adj_train,
-                        train_indices, 
-                        train_labels, 
-                        args.hop, 
-                        args.sample_ratio, 
-                        args.max_nodes_per_hop, 
-                        u_features, 
-                        v_features, 
-                        args.hop*2+1, 
-                        class_values)
+        'data/{}{}/{}/train'.format(*data_combo), 
+        adj_train,
+        train_indices, 
+        train_labels, 
+        args.hop, 
+        args.sample_ratio, 
+        args.max_nodes_per_hop, 
+        u_features, 
+        v_features, 
+        args.hop*2+1, 
+        class_values
+    )
     test_graphs = MyDynamicDataset(
-                        'data/{}{}/{}/test'.format(*data_combo), 
-                        adj_train,
-                        test_indices, 
-                        test_labels, 
-                        args.hop, 
-                        args.sample_ratio, 
-                        args.max_nodes_per_hop, 
-                        u_features, 
-                        v_features, 
-                        args.hop*2+1, 
-                        class_values)
+        'data/{}{}/{}/test'.format(*data_combo), 
+        adj_train,
+        test_indices, 
+        test_labels, 
+        args.hop, 
+        args.sample_ratio, 
+        args.max_nodes_per_hop, 
+        u_features, 
+        v_features, 
+        args.hop*2+1, 
+        class_values
+    )
     if not args.testing:
         val_graphs = MyDynamicDataset(
-                        'data/{}{}/{}/val'.format(*data_combo), 
-                        adj_train,
-                        val_indices, 
-                        val_labels, 
-                        args.hop, 
-                        args.sample_ratio, 
-                        args.max_nodes_per_hop, 
-                        u_features, 
-                        v_features, 
-                        args.hop*2+1, 
-                        class_values)
+            'data/{}{}/{}/val'.format(*data_combo), 
+            adj_train,
+            val_indices, 
+            val_labels, 
+            args.hop, 
+            args.sample_ratio, 
+            args.max_nodes_per_hop, 
+            u_features, 
+            v_features, 
+            args.hop*2+1, 
+            class_values
+        )
 
 # Determine testing data (on which data to evaluate the trained model
 if not args.testing: 
@@ -319,14 +359,16 @@ if not args.testing:
 '''
 if False:
     # DGCNN_RS GNN model
-    model = DGCNN_RS(train_graphs, 
-                     latent_dim=[32, 32, 32, 1], 
-                     k=0.6, 
-                     num_relations=len(class_values), 
-                     num_bases=4, 
-                     regression=True, 
-                     adj_dropout=args.adj_dropout, 
-                     force_undirected=args.force_undirected)
+    model = DGCNN_RS(
+        train_graphs, 
+        latent_dim=[32, 32, 32, 1], 
+        k=0.6, 
+        num_relations=len(class_values), 
+        num_bases=4, 
+        regression=True, 
+        adj_dropout=args.adj_dropout, 
+        force_undirected=args.force_undirected
+    )
     # record the k used in sortpooling
     if not args.transfer:
         with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'a') as f:
@@ -340,50 +382,62 @@ else:
     else:
         num_relations = len(class_values)
         multiply_by = 1
-    model = IGMC(train_graphs, 
-                 latent_dim=[32, 32, 32, 32], 
-                 num_relations=num_relations, 
-                 num_bases=4, 
-                 regression=True, 
-                 adj_dropout=args.adj_dropout, 
-                 force_undirected=args.force_undirected, 
-                 side_features=args.use_features, 
-                 n_side_features=n_features, 
-                 multiply_by=multiply_by)
+    model = IGMC(
+        train_graphs, 
+        latent_dim=[32, 32, 32, 32], 
+        num_relations=num_relations, 
+        num_bases=4, 
+        regression=True, 
+        adj_dropout=args.adj_dropout, 
+        force_undirected=args.force_undirected, 
+        side_features=args.use_features, 
+        n_side_features=n_features, 
+        multiply_by=multiply_by
+    )
 
 def logger(info, model, optimizer):
     epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
     with open(os.path.join(args.res_dir, 'log.txt'), 'a') as f:
         f.write('Epoch {}, train loss {:.4f}, test rmse {:.6f}\n'.format(
-            epoch, train_loss, test_rmse
-            ))
+            epoch, train_loss, test_rmse))
     if type(epoch) == int and epoch % args.save_interval == 0:
         print('Saving model states...')
         model_name = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))
-        optimizer_name = os.path.join(args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch))
+        optimizer_name = os.path.join(
+            args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch)
+        )
         if model is not None:
             torch.save(model.state_dict(), model_name)
         if optimizer is not None:
             torch.save(optimizer.state_dict(), optimizer_name)
 
 if not args.no_train:
-    train_multiple_epochs(train_graphs,
-                          test_graphs,
-                          model,
-                          args.epochs, 
-                          args.batch_size, 
-                          args.lr, 
-                          lr_decay_factor=args.lr_decay_factor, 
-                          lr_decay_step_size=args.lr_decay_step_size, 
-                          weight_decay=0, 
-                          ARR=args.ARR, 
-                          logger=logger, 
-                          continue_from=args.continue_from, 
-                          res_dir=args.res_dir)
+    train_multiple_epochs(
+        train_graphs,
+        test_graphs,
+        model,
+        args.epochs, 
+        args.batch_size, 
+        args.lr, 
+        lr_decay_factor=args.lr_decay_factor, 
+        lr_decay_step_size=args.lr_decay_step_size, 
+        weight_decay=0, 
+        ARR=args.ARR, 
+        logger=logger, 
+        continue_from=args.continue_from, 
+        res_dir=args.res_dir
+    )
 
 if args.visualize:
     model.load_state_dict(torch.load(args.model_pos))
-    visualize(model, test_graphs, args.res_dir, args.data_name, class_values, sort_by='prediction')
+    visualize(
+        model, 
+        test_graphs, 
+        args.res_dir, 
+        args.data_name, 
+        class_values, 
+        sort_by='prediction'
+    )
     if args.transfer:
         rmse = test_once(test_graphs, model, args.batch_size, logger)
         print('Transfer learning rmse is: {:.6f}'.format(rmse))
@@ -394,12 +448,29 @@ else:
         else: 
             start_epoch, end_epoch, interval = args.epochs-30, args.epochs, 10
         if args.transfer:
-            checkpoints = [os.path.join(args.transfer, 'model_checkpoint%d.pth' %x) for x in range(start_epoch, end_epoch+1, interval)]
-            epoch_info = 'transfer {}, ensemble of range({}, {}, {})'.format(args.transfer, start_epoch, end_epoch, interval)
+            checkpoints = [
+                os.path.join(args.transfer, 'model_checkpoint%d.pth' %x) 
+                for x in range(start_epoch, end_epoch+1, interval)
+            ]
+            epoch_info = 'transfer {}, ensemble of range({}, {}, {})'.format(
+                args.transfer, start_epoch, end_epoch, interval
+            )
         else:
-            checkpoints = [os.path.join(args.res_dir, 'model_checkpoint%d.pth' %x) for x in range(start_epoch, end_epoch+1, interval)]
-            epoch_info = 'ensemble of range({}, {}, {})'.format(start_epoch, end_epoch, interval)
-        rmse = test_once(test_graphs, model, args.batch_size, logger=None, ensemble=True, checkpoints=checkpoints)
+            checkpoints = [
+                os.path.join(args.res_dir, 'model_checkpoint%d.pth' %x) 
+                for x in range(start_epoch, end_epoch+1, interval)
+            ]
+            epoch_info = 'ensemble of range({}, {}, {})'.format(
+                start_epoch, end_epoch, interval
+            )
+        rmse = test_once(
+            test_graphs, 
+            model, 
+            args.batch_size, 
+            logger=None, 
+            ensemble=True, 
+            checkpoints=checkpoints
+        )
         print('Ensemble test rmse is: {:.6f}'.format(rmse))
     else:
         if args.transfer:

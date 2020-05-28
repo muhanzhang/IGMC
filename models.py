@@ -12,7 +12,8 @@ import time
 
 class GNN(torch.nn.Module):
     # a base GNN class, GCN message passing + sum_pooling
-    def __init__(self, dataset, gconv=GCNConv, latent_dim=[32, 32, 32, 1], regression=False, adj_dropout=0.2, force_undirected=False):
+    def __init__(self, dataset, gconv=GCNConv, latent_dim=[32, 32, 32, 1], 
+                 regression=False, adj_dropout=0.2, force_undirected=False):
         super(GNN, self).__init__()
         self.regression = regression
         self.adj_dropout = adj_dropout 
@@ -36,7 +37,11 @@ class GNN(torch.nn.Module):
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         if self.adj_dropout > 0:
-            edge_index, edge_type = dropout_adj(edge_index, edge_type, p=self.adj_dropout, force_undirected=self.force_undirected, num_nodes=len(x), training=self.training)
+            edge_index, edge_type = dropout_adj(
+                edge_index, edge_type, p=self.adj_dropout, 
+                force_undirected=self.force_undirected, num_nodes=len(x), 
+                training=self.training
+            )
         concat_states = []
         for conv in self.convs:
             x = torch.tanh(conv(x, edge_index))
@@ -57,8 +62,11 @@ class GNN(torch.nn.Module):
 
 class DGCNN(GNN):
     # DGCNN from [Zhang et al. AAAI 2018], GCN message passing + SortPooling
-    def __init__(self, dataset, gconv=GCNConv, latent_dim=[32, 32, 32, 1], k=30, regression=False, adj_dropout=0.2, force_undirected=False):
-        super(DGCNN, self).__init__(dataset, gconv, latent_dim, regression, adj_dropout, force_undirected)
+    def __init__(self, dataset, gconv=GCNConv, latent_dim=[32, 32, 32, 1], k=30, 
+                 regression=False, adj_dropout=0.2, force_undirected=False):
+        super(DGCNN, self).__init__(
+            dataset, gconv, latent_dim, regression, adj_dropout, force_undirected
+        )
         if k < 1:  # transform percentile to number
             node_nums = sorted([g.num_nodes for g in dataset])
             k = node_nums[int(math.ceil(k * len(node_nums)))-1]
@@ -87,7 +95,11 @@ class DGCNN(GNN):
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         if self.adj_dropout > 0:
-            edge_index, edge_type = dropout_adj(edge_index, edge_type, p=self.adj_dropout, force_undirected=self.force_undirected, num_nodes=len(x), training=self.training)
+            edge_index, edge_type = dropout_adj(
+                edge_index, edge_type, p=self.adj_dropout, 
+                force_undirected=self.force_undirected, num_nodes=len(x), 
+                training=self.training
+            )
         concat_states = []
         for conv in self.convs:
             x = torch.tanh(conv(x, edge_index))
@@ -110,8 +122,18 @@ class DGCNN(GNN):
 
 class DGCNN_RS(DGCNN):
     # A DGCNN model using RGCN convolution to take consideration of edge types.
-    def __init__(self, dataset, gconv=RGCNConv, latent_dim=[32, 32, 32, 1], k=30, num_relations=5, num_bases=2, regression=False, adj_dropout=0.2, force_undirected=False):
-        super(DGCNN_RS, self).__init__(dataset, GCNConv, latent_dim, k, regression, adj_dropout=adj_dropout, force_undirected=force_undirected)
+    def __init__(self, dataset, gconv=RGCNConv, latent_dim=[32, 32, 32, 1], k=30, 
+                 num_relations=5, num_bases=2, regression=False, adj_dropout=0.2, 
+                 force_undirected=False):
+        super(DGCNN_RS, self).__init__(
+            dataset, 
+            GCNConv, 
+            latent_dim, 
+            k, 
+            regression, 
+            adj_dropout=adj_dropout, 
+            force_undirected=force_undirected
+        )
         self.convs = torch.nn.ModuleList()
         self.convs.append(gconv(dataset.num_features, latent_dim[0], num_relations, num_bases))
         for i in range(0, len(latent_dim)-1):
@@ -120,7 +142,11 @@ class DGCNN_RS(DGCNN):
     def forward(self, data):
         x, edge_index, edge_type, batch = data.x, data.edge_index, data.edge_type, data.batch
         if self.adj_dropout > 0:
-            edge_index, edge_type = dropout_adj(edge_index, edge_type, p=self.adj_dropout, force_undirected=self.force_undirected, num_nodes=len(x), training=self.training)
+            edge_index, edge_type = dropout_adj(
+                edge_index, edge_type, p=self.adj_dropout, 
+                force_undirected=self.force_undirected, num_nodes=len(x), 
+                training=self.training
+            )
         concat_states = []
         for conv in self.convs:
             x = torch.tanh(conv(x, edge_index, edge_type))
@@ -142,9 +168,15 @@ class DGCNN_RS(DGCNN):
 
 
 class IGMC(GNN):
-    # The GNN model of Inductive Graph-based Matrix Completion. Use RGCN convolution + center-nodes readout.
-    def __init__(self, dataset, gconv=RGCNConv, latent_dim=[32, 32, 32, 32], num_relations=5, num_bases=2, regression=False, adj_dropout=0.2, force_undirected=False, side_features=False, n_side_features=0, multiply_by=1):
-        super(IGMC, self).__init__(dataset, GCNConv, latent_dim, regression, adj_dropout, force_undirected)
+    # The GNN model of Inductive Graph-based Matrix Completion. 
+    # Use RGCN convolution + center-nodes readout.
+    def __init__(self, dataset, gconv=RGCNConv, latent_dim=[32, 32, 32, 32], 
+                 num_relations=5, num_bases=2, regression=False, adj_dropout=0.2, 
+                 force_undirected=False, side_features=False, n_side_features=0, 
+                 multiply_by=1):
+        super(IGMC, self).__init__(
+            dataset, GCNConv, latent_dim, regression, adj_dropout, force_undirected
+        )
         self.multiply_by = multiply_by
         self.convs = torch.nn.ModuleList()
         self.convs.append(gconv(dataset.num_features, latent_dim[0], num_relations, num_bases))
@@ -159,7 +191,11 @@ class IGMC(GNN):
         start = time.time()
         x, edge_index, edge_type, batch = data.x, data.edge_index, data.edge_type, data.batch
         if self.adj_dropout > 0:
-            edge_index, edge_type = dropout_adj(edge_index, edge_type, p=self.adj_dropout, force_undirected=self.force_undirected, num_nodes=len(x), training=self.training)
+            edge_index, edge_type = dropout_adj(
+                edge_index, edge_type, p=self.adj_dropout, 
+                force_undirected=self.force_undirected, num_nodes=len(x), 
+                training=self.training
+            )
         concat_states = []
         for conv in self.convs:
             x = torch.tanh(conv(x, edge_index, edge_type))

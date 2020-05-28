@@ -114,7 +114,9 @@ def sparse_to_tuple(sparse_mx):
     return coords, values, shape
 
 
-def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=None, datasplit_from_file=False, verbose=True, rating_map=None, post_rating_map=None, ratio=1.0):
+def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=None, 
+                              datasplit_from_file=False, verbose=True, rating_map=None, 
+                              post_rating_map=None, ratio=1.0):
     """
     Splits data set into train/val/test sets from full bipartite adjacency matrix. Shuffling of dataset is done in
     load_data function.

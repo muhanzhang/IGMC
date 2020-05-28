@@ -43,8 +43,12 @@ def train_multiple_epochs(train_dataset,
     optimizer = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     start_epoch = 1
     if continue_from is not None:
-        model.load_state_dict(torch.load(os.path.join(res_dir, 'model_checkpoint{}.pth'.format(continue_from))))
-        optimizer.load_state_dict(torch.load(os.path.join(res_dir, 'optimizer_checkpoint{}.pth'.format(continue_from))))
+        model.load_state_dict(
+            torch.load(os.path.join(res_dir, 'model_checkpoint{}.pth'.format(continue_from)))
+        )
+        optimizer.load_state_dict(
+            torch.load(os.path.join(res_dir, 'optimizer_checkpoint{}.pth'.format(continue_from)))
+        )
         start_epoch = continue_from + 1
         epochs -= continue_from
 
@@ -61,7 +65,9 @@ def train_multiple_epochs(train_dataset,
             'train_loss': train_loss,
             'test_rmse': rmses[-1],
         }
-        pbar.set_description('Epoch {}, train loss {:.6f}, test rmse {:.6f}'.format(*eval_info.values()))
+        pbar.set_description(
+            'Epoch {}, train loss {:.6f}, test rmse {:.6f}'.format(*eval_info.values())
+        )
 
         if epoch % lr_decay_step_size == 0:
             for param_group in optimizer.param_groups:
@@ -131,7 +137,10 @@ def train(model, optimizer, loader, device, regression=False, ARR=0):
             loss = F.nll_loss(out, data.y.view(-1))
         if ARR != 0:
             for gconv in model.convs:
-                w = torch.matmul(gconv.att, gconv.basis.view(gconv.num_bases, -1)).view(gconv.num_relations, gconv.in_channels, gconv.out_channels)
+                w = torch.matmul(
+                    gconv.att, 
+                    gconv.basis.view(gconv.num_bases, -1)
+                ).view(gconv.num_relations, gconv.in_channels, gconv.out_channels)
                 reg_loss = torch.sum((w[1:, :, :] - w[:-1, :, :])**2)
                 loss += ARR * reg_loss
         loss.backward()
@@ -234,7 +243,8 @@ def visualize(model, graphs, res_dir, data_name, class_values, num=5, sort_by='p
     scores = highest_scores + lowest_scores
     ys = highest_ys + lowest_ys
     type_to_label = {0: 'u0', 1: 'v0', 2: 'u1', 3: 'v1', 4: 'u2', 5: 'v2'}
-    type_to_color = {0: 'xkcd:red', 1: 'xkcd:blue', 2: 'xkcd:orange', 3: 'xkcd:lightblue', 4: 'y', 5: 'g'}
+    type_to_color = {0: 'xkcd:red', 1: 'xkcd:blue', 2: 'xkcd:orange', 
+                     3: 'xkcd:lightblue', 4: 'y', 5: 'g'}
     plt.axis('off')
     f = plt.figure(figsize=(20, 10))
     axs = f.subplots(2, num)
@@ -270,7 +280,9 @@ def visualize(model, graphs, res_dir, data_name, class_values, num=5, sort_by='p
                 node_color='xkcd:red', ax=axs[i//num, i%num])
         nx.draw_networkx_nodes(g, {v0: pos[v0]}, nodelist=[v0], node_size=150,
                 node_color='xkcd:blue', ax=axs[i//num, i%num])
-        axs[i//num, i%num].set_title('{:.4f} ({:})'.format(scores[i], ys[i]), x=0.5, y=-0.05, fontsize=20)
+        axs[i//num, i%num].set_title('{:.4f} ({:})'.format(
+            scores[i], ys[i]), x=0.5, y=-0.05, fontsize=20
+        )
     f.subplots_adjust(right=0.85)
     cbar_ax = f.add_axes([0.88, 0.15, 0.02, 0.7])
     if len(class_values) > 20:
