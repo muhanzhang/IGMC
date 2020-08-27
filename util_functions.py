@@ -109,7 +109,7 @@ def links2subgraphs(A,
                     v_features=None, 
                     class_values=None, 
                     testing=False, 
-                    parallel=False):
+                    parallel=True):
     # extract enclosing subgraphs
     def helper(A, links, g_labels):
         g_list = []
