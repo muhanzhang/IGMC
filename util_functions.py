@@ -53,7 +53,7 @@ class MyDataset(InMemoryDataset):
 
 class MyDynamicDataset(Dataset):
     def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop, 
-                 u_features, v_features, max_node_label, class_values):
+                 u_features, v_features, class_values):
         super(MyDynamicDataset, self).__init__(root)
         self.A = A
         self.links = links
@@ -63,7 +63,6 @@ class MyDynamicDataset(Dataset):
         self.max_nodes_per_hop = max_nodes_per_hop
         self.u_features = u_features
         self.v_features = v_features
-        self.max_node_label = max_node_label
         self.class_values = class_values
 
     @property
@@ -85,14 +84,12 @@ class MyDynamicDataset(Dataset):
 
     def get(self, idx):
         i, j = self.links[0][idx], self.links[1][idx]
-        g, n_labels, n_features = subgraph_extraction_labeling(
-            (i, j), self.A, self.h, self.sample_ratio, self.max_nodes_per_hop, 
-            self.u_features, self.v_features, self.class_values
-        )
         g_label = self.labels[idx]
-        return nx_to_PyGGraph(
-            g, g_label, n_labels, n_features, self.max_node_label, self.class_values
+        tmp = subgraph_extraction_labeling(
+            (i, j), self.A, self.h, self.sample_ratio, self.max_nodes_per_hop, 
+            self.u_features, self.v_features, self.class_values, g_label
         )
+        return construct_pyg_graph(*tmp)
 
 
 def links2subgraphs(A,
@@ -116,17 +113,17 @@ def links2subgraphs(A,
         if not parallel:
             with tqdm(total=len(links[0])) as pbar:
                 for i, j, g_label in zip(links[0], links[1], g_labels):
-                    data = subgraph_extraction_labeling(
+                    tmp = subgraph_extraction_labeling(
                         (i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
                         v_features, class_values, g_label
                     )
+                    data = construct_pyg_graph(*tmp)
                     g_list.append(data)
                     pbar.update(1)
         else:
             start = time.time()
             pool = mp.Pool(mp.cpu_count())
             results = pool.starmap_async(
-                    #parallel_worker, 
                 subgraph_extraction_labeling, 
                 [
                     ((i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
@@ -141,13 +138,21 @@ def links2subgraphs(A,
                 if results.ready(): break
                 remaining = results._number_left
                 time.sleep(1)
-            g_list = results.get()
+            results = results.get()
             pool.close()
             pbar.close()
             end = time.time()
             print("Time eplased for subgraph extraction: {}s".format(end-start))
-            print("Transforming to pytorch_geometric graphs...".format(end-start))
-            del results
+            print("Transforming to pytorch_geometric graphs...")
+            g_list = []
+            pbar = tqdm(total=len(results))
+            while results:
+                tmp = results.pop()
+                g_list.append(construct_pyg_graph(*tmp))
+                pbar.update(1)
+            pbar.close()
+            end2 = time.time()
+            print("Time eplased for transforming to pytorch_geometric graphs: {}s".format(end2-end))
         return g_list
 
     print('Enclosing subgraph extraction begins...')
@@ -194,19 +199,14 @@ def subgraph_extraction_labeling(ind, A, h=1, sample_ratio=1.0, max_nodes_per_ho
     # remove link between target nodes
     subgraph[0, 0] = 0
 
-    # construct pyg data
+    # prepare pyg graph constructor input
     u, v, r = ssp.find(subgraph)  # r is 1, 2... (rating labels + 1)
     v += len(u_nodes)
-    u, v = torch.LongTensor(u), torch.LongTensor(v)
-    r = torch.LongTensor(r-1)  # transform r back to rating label
+    r = r - 1  # transform r back to rating label
     num_nodes = len(u_nodes) + len(v_nodes)
-    edge_index = torch.stack([torch.cat([u, v]), torch.cat([v, u])], 0)
-    edge_type = torch.cat([r, r])
     node_labels = [x*2 for x in u_dist] + [x*2+1 for x in v_dist]
     max_node_label = 2*h + 1
-    x = torch.FloatTensor(one_hot(node_labels, max_node_label+1))
-    y = torch.FloatTensor([class_values[y]])
-    data = Data(x, edge_index, edge_type=edge_type, y=y)
+    y = class_values[y]
 
     # get node features
     if u_features is not None:
@@ -224,8 +224,6 @@ def subgraph_extraction_labeling(ind, A, h=1, sample_ratio=1.0, max_nodes_per_ho
                 [np.zeros([v_features.shape[0], u_features.shape[1]]), v_features], 1
             )
             node_features = np.concatenate([u_extended, v_extended], 0)
-            x2 = torch.FloatTensor(node_features)
-            data.x = torch.cat([data.x, x2], 1)
     if False:
         # use identity features (one-hot encodings of node idxes)
         u_ids = one_hot(u_nodes, A.shape[0] + A.shape[1])
@@ -233,14 +231,31 @@ def subgraph_extraction_labeling(ind, A, h=1, sample_ratio=1.0, max_nodes_per_ho
         node_ids = np.concatenate([u_ids, v_ids], 0)
         #node_features = np.concatenate([node_features, node_ids], 1)
         node_features = node_ids
-        x2 = torch.FloatTensor(node_features)
-        data.x = torch.cat([data.x, x2], 1)
     if True:
         # only output node features for the target user and item
         if u_features is not None and v_features is not None:
-            data.u_feature = torch.FloatTensor(u_features[0]).unsqueeze(0)
-            data.v_feature = torch.FloatTensor(v_features[0]).unsqueeze(0)
+            node_features = [u_features[0], v_features[0]]
+    
+    return u, v, r, node_labels, max_node_label, y, node_features
 
+
+def construct_pyg_graph(u, v, r, node_labels, max_node_label, y, node_features):
+    u, v = torch.LongTensor(u), torch.LongTensor(v)
+    r = torch.LongTensor(r)  
+    edge_index = torch.stack([torch.cat([u, v]), torch.cat([v, u])], 0)
+    edge_type = torch.cat([r, r])
+    x = torch.FloatTensor(one_hot(node_labels, max_node_label+1))
+    y = torch.FloatTensor([y])
+    data = Data(x, edge_index, edge_type=edge_type, y=y)
+
+    if node_features is not None:
+        if type(node_features) == list:  # a list of u_feature and v_feature
+            u_feature, v_feature = node_features
+            data.u_feature = torch.FloatTensor(u_feature).unsqueeze(0)
+            data.v_feature = torch.FloatTensor(v_feature).unsqueeze(0)
+        else:
+            x2 = torch.FloatTensor(node_features)
+            data.x = torch.cat([data.x, x2], 1)
     return data
 
    

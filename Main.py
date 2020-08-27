@@ -29,6 +29,23 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 warnings.showwarning = warn_with_traceback
 
 
+def logger(info, model, optimizer):
+    epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
+    with open(os.path.join(args.res_dir, 'log.txt'), 'a') as f:
+        f.write('Epoch {}, train loss {:.4f}, test rmse {:.6f}\n'.format(
+            epoch, train_loss, test_rmse))
+    if type(epoch) == int and epoch % args.save_interval == 0:
+        print('Saving model states...')
+        model_name = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))
+        optimizer_name = os.path.join(
+            args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch)
+        )
+        if model is not None:
+            torch.save(model.state_dict(), model_name)
+        if optimizer is not None:
+            torch.save(optimizer.state_dict(), optimizer_name)
+
+
 # Arguments
 parser = argparse.ArgumentParser(description='Inductive Graph-based Matrix Completion')
 # general settings
@@ -319,7 +336,6 @@ else:  # build dynamic datasets that extract subgraphs on the fly
         args.max_nodes_per_hop, 
         u_features, 
         v_features, 
-        args.hop*2+1, 
         class_values
     )
     test_graphs = MyDynamicDataset(
@@ -332,7 +348,6 @@ else:  # build dynamic datasets that extract subgraphs on the fly
         args.max_nodes_per_hop, 
         u_features, 
         v_features, 
-        args.hop*2+1, 
         class_values
     )
     if not args.testing:
@@ -346,7 +361,6 @@ else:  # build dynamic datasets that extract subgraphs on the fly
             args.max_nodes_per_hop, 
             u_features, 
             v_features, 
-            args.hop*2+1, 
             class_values
         )
 
@@ -395,22 +409,6 @@ else:
         n_side_features=n_features, 
         multiply_by=multiply_by
     )
-
-def logger(info, model, optimizer):
-    epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
-    with open(os.path.join(args.res_dir, 'log.txt'), 'a') as f:
-        f.write('Epoch {}, train loss {:.4f}, test rmse {:.6f}\n'.format(
-            epoch, train_loss, test_rmse))
-    if type(epoch) == int and epoch % args.save_interval == 0:
-        print('Saving model states...')
-        model_name = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))
-        optimizer_name = os.path.join(
-            args.res_dir, 'optimizer_checkpoint{}.pth'.format(epoch)
-        )
-        if model is not None:
-            torch.save(model.state_dict(), model_name)
-        if optimizer is not None:
-            torch.save(optimizer.state_dict(), optimizer_name)
 
 if not args.no_train:
     train_multiple_epochs(
