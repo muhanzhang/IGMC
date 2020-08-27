@@ -30,6 +30,7 @@ def train_multiple_epochs(train_dataset,
                           lr_decay_step_size,
                           weight_decay,
                           ARR=0, 
+                          test_freq=1, 
                           logger=None, 
                           continue_from=None, 
                           res_dir=None):
@@ -55,19 +56,30 @@ def train_multiple_epochs(train_dataset,
     if torch.cuda.is_available():
         torch.cuda.synchronize()
 
+    batch_pbar = len(train_dataset) >= 100000
     t_start = time.perf_counter()
-    pbar = tqdm(range(start_epoch, epochs + start_epoch))
+    if not batch_pbar:
+        pbar = tqdm(range(start_epoch, epochs + start_epoch))
+    else:
+        pbar = range(start_epoch, epochs + start_epoch)
     for epoch in pbar:
-        train_loss = train(model, optimizer, train_loader, device, regression=True, ARR=ARR)
-        rmses.append(eval_rmse(model, test_loader, device))
+        train_loss = train(model, optimizer, train_loader, device, regression=True, ARR=ARR, 
+                           show_progress=batch_pbar, epoch=epoch)
+        if epoch % test_freq == 0:
+            rmses.append(eval_rmse(model, test_loader, device, show_progress=batch_pbar))
+        else:
+            rmses.append(np.nan)
         eval_info = {
             'epoch': epoch,
             'train_loss': train_loss,
             'test_rmse': rmses[-1],
         }
-        pbar.set_description(
-            'Epoch {}, train loss {:.6f}, test rmse {:.6f}'.format(*eval_info.values())
-        )
+        if not batch_pbar:
+            pbar.set_description(
+                'Epoch {}, train loss {:.6f}, test rmse {:.6f}'.format(*eval_info.values())
+            )
+        else:
+            print('Epoch {}, train loss {:.6f}, test rmse {:.6f}'.format(*eval_info.values()))
 
         if epoch % lr_decay_step_size == 0:
             for param_group in optimizer.param_groups:
@@ -124,10 +136,15 @@ def num_graphs(data):
         return data.x.size(0)
 
 
-def train(model, optimizer, loader, device, regression=False, ARR=0):
+def train(model, optimizer, loader, device, regression=False, ARR=0, 
+          show_progress=False, epoch=None):
     model.train()
     total_loss = 0
-    for data in loader:
+    if show_progress:
+        pbar = tqdm(loader)
+    else:
+        pbar = loader
+    for data in pbar:
         optimizer.zero_grad()
         data = data.to(device)
         out = model(data)
@@ -135,6 +152,8 @@ def train(model, optimizer, loader, device, regression=False, ARR=0):
             loss = F.mse_loss(out, data.y.view(-1))
         else:
             loss = F.nll_loss(out, data.y.view(-1))
+        if show_progress:
+            pbar.set_description('Epoch {}, batch loss: {}'.format(epoch, loss.item()))
         if ARR != 0:
             for gconv in model.convs:
                 w = torch.matmul(

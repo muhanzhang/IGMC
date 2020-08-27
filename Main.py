@@ -89,6 +89,8 @@ parser.add_argument('--epochs', type=int, default=80, metavar='N',
                     help='number of epochs to train')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='batch size during training')
+parser.add_argument('--test-freq', type=int, default=1, metavar='N',
+                    help='test every n epochs')
 parser.add_argument('--ARR', type=float, default=0.001, 
                     help='The adjacenct rating regularizer. If not 0, regularize the \
                     differences between graph convolution parameters W associated with\
@@ -423,6 +425,7 @@ if not args.no_train:
         lr_decay_step_size=args.lr_decay_step_size, 
         weight_decay=0, 
         ARR=args.ARR, 
+        test_freq=args.test_freq, 
         logger=logger, 
         continue_from=args.continue_from, 
         res_dir=args.res_dir
