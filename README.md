@@ -93,8 +93,6 @@ If you find the code useful, please cite our paper.
 
 Check out our another successful work of inductive [link prediction](https://github.com/muhanzhang/SEAL). 
 
-There are also recent interesting papers on inductive knowledge graph completion, such as [Inductive Relation Prediction by Subgraph Reasoning](https://arxiv.org/pdf/1911.06962.pdf) and [Entity Context and Relational Paths for Knowledge Graph Completion](https://arxiv.org/pdf/2002.06757.pdf).
-
 Muhan Zhang, Washington University in St. Louis
 muhan@wustl.edu
 10/13/2019
