@@ -301,7 +301,6 @@ if not args.dynamic_dataset: # use preprocessed graph datasets (stored on disk)
             args.max_nodes_per_hop, 
             u_features, 
             v_features, 
-            args.hop*2+1, 
             class_values, 
             args.testing
         )
