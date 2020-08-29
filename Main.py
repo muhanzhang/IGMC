@@ -237,7 +237,6 @@ elif args.data_name == 'ml_100k':
         args.data_name, args.testing, rating_map, post_rating_map, args.ratio
     )
 else:
-    print("Using random dataset split ...")
     (
         u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices,
         val_labels, val_u_indices, val_v_indices, test_labels, test_u_indices, 

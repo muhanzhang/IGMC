@@ -12,6 +12,7 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 import shutil
 import os.path
+from tqdm import tqdm
 try:
     from BytesIO import BytesIO
 except ImportError:
@@ -332,6 +333,34 @@ def load_data(fname, seed=1234, verbose=True):
         u_nodes_ratings = data_array[:, 0].astype(dtypes['u_nodes'])
         v_nodes_ratings = data_array[:, 1].astype(dtypes['v_nodes'])
         ratings = data_array[:, 2].astype(dtypes['ratings'])
+
+        u_nodes_ratings, u_dict, num_users = map_data(u_nodes_ratings)
+        v_nodes_ratings, v_dict, num_items = map_data(v_nodes_ratings)
+
+        u_nodes_ratings, v_nodes_ratings = u_nodes_ratings.astype(np.int64), v_nodes_ratings.astype(np.int64)
+        ratings = ratings.astype(np.float32)
+
+    elif fname == 'ml_25m':
+
+        # Please download the processed movielens25M.csv to raw_data/ml_25m/
+        # Each row is uid,iid,cid,time,rating, sorted by time
+        files = ['/movielens25M.csv']
+        row_count = 24999850
+
+        filename = data_dir + files[0]
+
+        chunksize = 10000
+        data = pd.DataFrame()
+        pbar = tqdm(pd.read_csv(filename, header=0, usecols=['uid', 'iid', 'rating'], 
+                    chunksize=chunksize), total=row_count//chunksize)
+        for chunk in pbar:
+            data = pd.concat([data, chunk], ignore_index=True)
+
+        data_array = data.values
+
+        u_nodes_ratings = data_array[:, 0]
+        v_nodes_ratings = data_array[:, 1]
+        ratings = data_array[:, 2]
 
         u_nodes_ratings, u_dict, num_users = map_data(u_nodes_ratings)
         v_nodes_ratings, v_dict, num_items = map_data(v_nodes_ratings)

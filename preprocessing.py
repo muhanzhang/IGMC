@@ -125,7 +125,7 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
     """
 
     if datasplit_from_file and os.path.isfile(datasplit_path):
-        print('Reading dataset splits from file...')
+        print('Reading processed dataset from file...')
         with open(datasplit_path, 'rb') as f:
             num_users, num_items, u_nodes, v_nodes, ratings, u_features, v_features = pkl.load(f)
 
@@ -155,13 +155,19 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
     labels = labels.reshape([-1])
 
     # number of test and validation edges
-    num_test = int(np.ceil(ratings.shape[0] * 0.1))
-    if dataset == 'ml_100k':
-        num_val = int(np.ceil(ratings.shape[0] * 0.9 * 0.05))
+    if dataset == 'ml_25m':
+        print("Split dataset into train/val/test by time ...")
+        num_train = int(ratings.shape[0] * 0.7)
+        num_val = int(ratings.shape[0] * 0.8) - num_train
+        num_test = ratings.shape[0] - num_train - num_val
     else:
-        num_val = int(np.ceil(ratings.shape[0] * 0.9 * 0.05))
-
-    num_train = ratings.shape[0] - num_val - num_test
+        print("Using random dataset split ...")
+        num_test = int(np.ceil(ratings.shape[0] * 0.1))
+        if dataset == 'ml_100k':
+            num_val = int(np.ceil(ratings.shape[0] * 0.9 * 0.05))
+        else:
+            num_val = int(np.ceil(ratings.shape[0] * 0.9 * 0.05))
+        num_train = ratings.shape[0] - num_val - num_test
 
     pairs_nonzero = np.array([[u, v] for u, v in zip(u_nodes, v_nodes)])
 
