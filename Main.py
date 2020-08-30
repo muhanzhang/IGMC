@@ -275,11 +275,6 @@ if args.debug:  # use a small number of data to debug
     val_u_indices, val_v_indices = val_u_indices[:num_data], val_v_indices[:num_data]
     test_u_indices, test_v_indices = test_u_indices[:num_data], test_v_indices[:num_data]
 
-if args.max_train_num is not None:  # sample certain number of train
-    perm = np.random.permutation(len(train_u_indices))[:args.max_train_num]
-    train_u_indices = train_u_indices[torch.tensor(perm)]
-    train_v_indices = train_v_indices[torch.tensor(perm)]
-
 train_indices = (train_u_indices, train_v_indices)
 val_indices = (val_u_indices, val_v_indices)
 test_indices = (test_u_indices, test_v_indices)
@@ -295,7 +290,7 @@ print('#train: %d, #val: %d, #test: %d' % (
 train_graphs, val_graphs, test_graphs = None, None, None
 data_combo = (args.data_name, args.data_appendix, val_test_appendix)
 if not args.dynamic_dataset: # use preprocessed graph datasets (stored on disk)
-    if args.reprocess or not os.path.isdir('data/{}{}/{}/train'.format(*data_combo)):
+    if args.reprocess:
         # if reprocess=True, delete the previously cached data and reprocess.
         if os.path.isdir('data/{}{}/{}/train'.format(*data_combo)):
             rmtree('data/{}{}/{}/train'.format(*data_combo))
@@ -303,27 +298,48 @@ if not args.dynamic_dataset: # use preprocessed graph datasets (stored on disk)
             rmtree('data/{}{}/{}/val'.format(*data_combo))
         if os.path.isdir('data/{}{}/{}/test'.format(*data_combo)):
             rmtree('data/{}{}/{}/test'.format(*data_combo))
-        # extract enclosing subgraphs and build the datasets
-        train_graphs, val_graphs, test_graphs = links2subgraphs(
-            adj_train,
-            train_indices, 
+    # extract enclosing subgraphs and build the datasets
+    train_graphs = MyDataset(
+        'data/{}{}/{}/train'.format(*data_combo),
+        adj_train, 
+        train_indices, 
+        train_labels, 
+        args.hop, 
+        args.sample_ratio, 
+        args.max_nodes_per_hop, 
+        u_features, 
+        v_features, 
+        class_values, 
+        True, 
+        max_num=args.max_train_num
+    )
+    test_graphs = MyDataset(
+        'data/{}{}/{}/test'.format(*data_combo),
+        adj_train, 
+        test_indices, 
+        test_labels, 
+        args.hop, 
+        args.sample_ratio, 
+        args.max_nodes_per_hop, 
+        u_features, 
+        v_features, 
+        class_values, 
+        True, 
+    )
+    if not args.testing:
+        val_graphs = MyDataset(
+            'data/{}{}/{}/val'.format(*data_combo),
+            adj_train, 
             val_indices, 
-            test_indices,
-            train_labels, 
             val_labels, 
-            test_labels, 
             args.hop, 
             args.sample_ratio, 
             args.max_nodes_per_hop, 
             u_features, 
             v_features, 
             class_values, 
-            args.testing
+            True, 
         )
-    if not args.testing:
-        val_graphs = MyDataset(val_graphs, root='data/{}{}/{}/val'.format(*data_combo))
-    test_graphs = MyDataset(test_graphs, root='data/{}{}/{}/test'.format(*data_combo))
-    train_graphs = MyDataset(train_graphs, root='data/{}{}/{}/train'.format(*data_combo))
 else:  # build dynamic datasets that extract subgraphs on the fly
     train_graphs = MyDynamicDataset(
         'data/{}{}/{}/train'.format(*data_combo), 

@@ -19,36 +19,40 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 class MyDataset(InMemoryDataset):
-    def __init__(self, data_list, root, transform=None, pre_transform=None):
-        self.data_list = data_list
-        super(MyDataset, self).__init__(root, transform, pre_transform)
+    def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop, 
+                 u_features, v_features, class_values, parallel, max_num=None):
+        self.A = A
+        self.links = links
+        self.labels = labels
+        self.h = h
+        self.sample_ratio = sample_ratio
+        self.max_nodes_per_hop = max_nodes_per_hop
+        self.u_features = u_features
+        self.v_features = v_features
+        self.class_values = class_values
+        self.parallel = parallel
+        self.max_num = max_num
+        super(MyDataset, self).__init__(root)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
     @property
-    def raw_file_names(self):
-        return []
-
-    @property
     def processed_file_names(self):
-        return ['data.pt']
-
-    def download(self):
-        # Download to `self.raw_dir`.
-        pass
+        name = 'data.pt'
+        if self.max_num is not None:
+            name = 'data_{}.pt'.format(self.max_num)
+        return [name]
 
     def process(self):
-        # Read data into huge `Data` list.
-        data_list = self.data_list
-
-        if self.pre_filter is not None:
-            data_list = [data for data in data_list if self.pre_filter(data)]
-
-        if self.pre_transform is not None:
-            data_list = [self.pre_transform(data) for data in data_list]
+        # Extract enclosing subgraphs and save to disk
+        data_list = links2subgraphs(self.A, self.links, self.labels, self.h, 
+                                    self.sample_ratio, self.max_nodes_per_hop, 
+                                    self.u_features, self.v_features, 
+                                    self.class_values, self.parallel, 
+                                    self.max_num)
 
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
-        del self.data_list
+        del data_list
 
 
 class MyDynamicDataset(Dataset):
@@ -65,20 +69,6 @@ class MyDynamicDataset(Dataset):
         self.v_features = v_features
         self.class_values = class_values
 
-    @property
-    def raw_file_names(self):
-        return []
-
-    @property
-    def processed_file_names(self):
-        return []
-
-    def _download(self):
-        pass
-
-    def _process(self):
-        pass
-
     def __len__(self):
         return len(self.links[0])
 
@@ -93,77 +83,71 @@ class MyDynamicDataset(Dataset):
 
 
 def links2subgraphs(A,
-                    train_indices, 
-                    val_indices, 
-                    test_indices, 
-                    train_labels, 
-                    val_labels, 
-                    test_labels, 
+                    links, 
+                    labels, 
                     h=1, 
                     sample_ratio=1.0, 
                     max_nodes_per_hop=None, 
                     u_features=None, 
                     v_features=None, 
                     class_values=None, 
-                    testing=False, 
-                    parallel=True):
+                    parallel=True, 
+                    max_num=None):
     # extract enclosing subgraphs
-    def helper(A, links, g_labels):
-        g_list = []
-        if not parallel:
-            with tqdm(total=len(links[0])) as pbar:
-                for i, j, g_label in zip(links[0], links[1], g_labels):
-                    tmp = subgraph_extraction_labeling(
-                        (i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
-                        v_features, class_values, g_label
-                    )
-                    data = construct_pyg_graph(*tmp)
-                    g_list.append(data)
-                    pbar.update(1)
-        else:
-            start = time.time()
-            pool = mp.Pool(mp.cpu_count())
-            results = pool.starmap_async(
-                subgraph_extraction_labeling, 
-                [
-                    ((i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
-                    v_features, class_values, g_label) 
-                    for i, j, g_label in zip(links[0], links[1], g_labels)
-                ]
-            )
-            remaining = results._number_left
-            pbar = tqdm(total=remaining)
-            while True:
-                pbar.update(remaining - results._number_left)
-                if results.ready(): break
-                remaining = results._number_left
-                time.sleep(1)
-            results = results.get()
-            pool.close()
-            pbar.close()
-            end = time.time()
-            print("Time eplased for subgraph extraction: {}s".format(end-start))
-            print("Transforming to pytorch_geometric graphs...")
-            g_list = []
-            pbar = tqdm(total=len(results))
-            while results:
-                tmp = results.pop()
-                g_list.append(construct_pyg_graph(*tmp))
-                pbar.update(1)
-            pbar.close()
-            end2 = time.time()
-            print("Time eplased for transforming to pytorch_geometric graphs: {}s".format(end2-end))
-        return g_list
-
+    if max_num is not None:
+        np.random.seed(123)
+        num_links = len(links[0])
+        perm = np.random.permutation(num_links)
+        perm = perm[:max_num]
+        links = (links[0][perm], links[1][perm])
+        labels = labels[perm]
     print('Enclosing subgraph extraction begins...')
-    train_graphs = helper(A, train_indices, train_labels)
-    if not testing:
-        val_graphs = helper(A, val_indices, val_labels)
+    g_list = []
+    if not parallel:
+        with tqdm(total=len(links[0])) as pbar:
+            for i, j, g_label in zip(links[0], links[1], labels):
+                tmp = subgraph_extraction_labeling(
+                    (i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
+                    v_features, class_values, g_label
+                )
+                data = construct_pyg_graph(*tmp)
+                g_list.append(data)
+                pbar.update(1)
     else:
-        val_graphs = []
-    test_graphs = helper(A, test_indices, test_labels)
+        start = time.time()
+        pool = mp.Pool(mp.cpu_count())
+        results = pool.starmap_async(
+            subgraph_extraction_labeling, 
+            [
+                ((i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
+                v_features, class_values, g_label) 
+                for i, j, g_label in zip(links[0], links[1], labels)
+            ]
+        )
+        remaining = results._number_left
+        pbar = tqdm(total=remaining)
+        while True:
+            pbar.update(remaining - results._number_left)
+            if results.ready(): break
+            remaining = results._number_left
+            time.sleep(1)
+        results = results.get()
+        pool.close()
+        pbar.close()
+        end = time.time()
+        print("Time eplased for subgraph extraction: {}s".format(end-start))
+        print("Transforming to pytorch_geometric graphs...")
+        g_list = []
+        pbar = tqdm(total=len(results))
+        while results:
+            tmp = results.pop()
+            g_list.append(construct_pyg_graph(*tmp))
+            pbar.update(1)
+        pbar.close()
+        end2 = time.time()
+        print("Time eplased for transforming to pytorch_geometric graphs: {}s".format(end2-end))
+    return g_list
 
-    return train_graphs, val_graphs, test_graphs
 
 
 def subgraph_extraction_labeling(ind, A, h=1, sample_ratio=1.0, max_nodes_per_hop=None, 
