@@ -72,9 +72,11 @@ parser.add_argument('--data-seed', type=int, default=1234, metavar='S',
                     valid only for ml_1m and ml_10m')
 parser.add_argument('--reprocess', action='store_true', default=False,
                     help='if True, reprocess data instead of using prestored .pkl data')
-parser.add_argument('--dynamic-dataset', action='store_true', default=False,
-                    help='if True, extract enclosing subgraphs on the fly instead of \
+parser.add_argument('--dynamic-train', action='store_true', default=False,
+                    help='extract training enclosing subgraphs on the fly instead of \
                     storing in disk; works for large datasets that cannot fit into memory')
+parser.add_argument('--dynamic-test', action='store_true', default=False)
+parser.add_argument('--dynamic-val', action='store_true', default=False)
 parser.add_argument('--keep-old', action='store_true', default=False,
                     help='if True, do not overwrite old .py files in the result folder')
 parser.add_argument('--save-interval', type=int, default=10,
@@ -227,8 +229,7 @@ if args.data_name in ['flixster', 'douban', 'yahoo_music']:
         test_v_indices, class_values
     ) = load_data_monti(args.data_name, args.testing, rating_map, post_rating_map)
 elif args.data_name == 'ml_100k':
-    print("Using official MovieLens dataset split u1.base/u1.test with 20% validation \
-        set size...")
+    print("Using official MovieLens split u1.base/u1.test with 20% validation...")
     (
         u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices,
         val_labels, val_u_indices, val_v_indices, test_labels, test_u_indices, 
@@ -279,7 +280,10 @@ train_indices = (train_u_indices, train_v_indices)
 val_indices = (val_u_indices, val_v_indices)
 test_indices = (test_u_indices, test_v_indices)
 print('#train: %d, #val: %d, #test: %d' % (
-    len(train_u_indices), len(val_u_indices), len(test_u_indices)))
+    len(train_u_indices) if not args.max_train_num else args.max_train_num, 
+    len(val_u_indices), 
+    len(test_u_indices), 
+))
 
 
 '''
@@ -289,95 +293,57 @@ print('#train: %d, #val: %d, #test: %d' % (
 '''
 train_graphs, val_graphs, test_graphs = None, None, None
 data_combo = (args.data_name, args.data_appendix, val_test_appendix)
-if not args.dynamic_dataset: # use preprocessed graph datasets (stored on disk)
-    if args.reprocess:
-        # if reprocess=True, delete the previously cached data and reprocess.
-        if os.path.isdir('data/{}{}/{}/train'.format(*data_combo)):
-            rmtree('data/{}{}/{}/train'.format(*data_combo))
-        if os.path.isdir('data/{}{}/{}/val'.format(*data_combo)):
-            rmtree('data/{}{}/{}/val'.format(*data_combo))
-        if os.path.isdir('data/{}{}/{}/test'.format(*data_combo)):
-            rmtree('data/{}{}/{}/test'.format(*data_combo))
-    # extract enclosing subgraphs and build the datasets
-    train_graphs = MyDataset(
-        'data/{}{}/{}/train'.format(*data_combo),
+if args.reprocess:
+    # if reprocess=True, delete the previously cached data and reprocess.
+    if os.path.isdir('data/{}{}/{}/train'.format(*data_combo)):
+        rmtree('data/{}{}/{}/train'.format(*data_combo))
+    if os.path.isdir('data/{}{}/{}/val'.format(*data_combo)):
+        rmtree('data/{}{}/{}/val'.format(*data_combo))
+    if os.path.isdir('data/{}{}/{}/test'.format(*data_combo)):
+        rmtree('data/{}{}/{}/test'.format(*data_combo))
+# create dataset, either dynamically extract enclosing subgraphs, 
+# or extract in preprocessing and save to disk.
+dataset_class = 'MyDynamicDataset' if args.dynamic_train else 'MyDataset'
+train_graphs = eval(dataset_class)(
+    'data/{}{}/{}/train'.format(*data_combo),
+    adj_train, 
+    train_indices, 
+    train_labels, 
+    args.hop, 
+    args.sample_ratio, 
+    args.max_nodes_per_hop, 
+    u_features, 
+    v_features, 
+    class_values, 
+    max_num=args.max_train_num
+)
+dataset_class = 'MyDynamicDataset' if args.dynamic_test else 'MyDataset'
+test_graphs = eval(dataset_class)(
+    'data/{}{}/{}/test'.format(*data_combo),
+    adj_train, 
+    test_indices, 
+    test_labels, 
+    args.hop, 
+    args.sample_ratio, 
+    args.max_nodes_per_hop, 
+    u_features, 
+    v_features, 
+    class_values, 
+)
+if not args.testing:
+    dataset_class = 'MyDynamicDataset' if args.dynamic_val else 'MyDataset'
+    val_graphs = eval(dataset_class)(
+        'data/{}{}/{}/val'.format(*data_combo),
         adj_train, 
-        train_indices, 
-        train_labels, 
+        val_indices, 
+        val_labels, 
         args.hop, 
         args.sample_ratio, 
         args.max_nodes_per_hop, 
         u_features, 
         v_features, 
         class_values, 
-        True, 
-        max_num=args.max_train_num
     )
-    test_graphs = MyDataset(
-        'data/{}{}/{}/test'.format(*data_combo),
-        adj_train, 
-        test_indices, 
-        test_labels, 
-        args.hop, 
-        args.sample_ratio, 
-        args.max_nodes_per_hop, 
-        u_features, 
-        v_features, 
-        class_values, 
-        True, 
-    )
-    if not args.testing:
-        val_graphs = MyDataset(
-            'data/{}{}/{}/val'.format(*data_combo),
-            adj_train, 
-            val_indices, 
-            val_labels, 
-            args.hop, 
-            args.sample_ratio, 
-            args.max_nodes_per_hop, 
-            u_features, 
-            v_features, 
-            class_values, 
-            True, 
-        )
-else:  # build dynamic datasets that extract subgraphs on the fly
-    train_graphs = MyDynamicDataset(
-        'data/{}{}/{}/train'.format(*data_combo), 
-        adj_train,
-        train_indices, 
-        train_labels, 
-        args.hop, 
-        args.sample_ratio, 
-        args.max_nodes_per_hop, 
-        u_features, 
-        v_features, 
-        class_values
-    )
-    test_graphs = MyDynamicDataset(
-        'data/{}{}/{}/test'.format(*data_combo), 
-        adj_train,
-        test_indices, 
-        test_labels, 
-        args.hop, 
-        args.sample_ratio, 
-        args.max_nodes_per_hop, 
-        u_features, 
-        v_features, 
-        class_values
-    )
-    if not args.testing:
-        val_graphs = MyDynamicDataset(
-            'data/{}{}/{}/val'.format(*data_combo), 
-            adj_train,
-            val_indices, 
-            val_labels, 
-            args.hop, 
-            args.sample_ratio, 
-            args.max_nodes_per_hop, 
-            u_features, 
-            v_features, 
-            class_values
-        )
 
 # Determine testing data (on which data to evaluate the trained model
 if not args.testing: 

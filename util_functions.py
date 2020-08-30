@@ -20,7 +20,7 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 class MyDataset(InMemoryDataset):
     def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop, 
-                 u_features, v_features, class_values, parallel, max_num=None):
+                 u_features, v_features, class_values, max_num=None, parallel=True):
         self.A = A
         self.links = links
         self.labels = labels
@@ -32,6 +32,13 @@ class MyDataset(InMemoryDataset):
         self.class_values = class_values
         self.parallel = parallel
         self.max_num = max_num
+        if max_num is not None:
+            np.random.seed(123)
+            num_links = len(links[0])
+            perm = np.random.permutation(num_links)
+            perm = perm[:max_num]
+            self.links = (links[0][perm], links[1][perm])
+            self.labels = labels[perm]
         super(MyDataset, self).__init__(root)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
@@ -47,8 +54,7 @@ class MyDataset(InMemoryDataset):
         data_list = links2subgraphs(self.A, self.links, self.labels, self.h, 
                                     self.sample_ratio, self.max_nodes_per_hop, 
                                     self.u_features, self.v_features, 
-                                    self.class_values, self.parallel, 
-                                    self.max_num)
+                                    self.class_values, self.parallel)
 
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
@@ -57,7 +63,7 @@ class MyDataset(InMemoryDataset):
 
 class MyDynamicDataset(Dataset):
     def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop, 
-                 u_features, v_features, class_values):
+                 u_features, v_features, class_values, max_num=None):
         super(MyDynamicDataset, self).__init__(root)
         self.A = A
         self.links = links
@@ -68,6 +74,13 @@ class MyDynamicDataset(Dataset):
         self.u_features = u_features
         self.v_features = v_features
         self.class_values = class_values
+        if max_num is not None:
+            np.random.seed(123)
+            num_links = len(links[0])
+            perm = np.random.permutation(num_links)
+            perm = perm[:max_num]
+            self.links = (links[0][perm], links[1][perm])
+            self.labels = labels[perm]
 
     def __len__(self):
         return len(self.links[0])
@@ -91,16 +104,8 @@ def links2subgraphs(A,
                     u_features=None, 
                     v_features=None, 
                     class_values=None, 
-                    parallel=True, 
-                    max_num=None):
+                    parallel=True):
     # extract enclosing subgraphs
-    if max_num is not None:
-        np.random.seed(123)
-        num_links = len(links[0])
-        perm = np.random.permutation(num_links)
-        perm = perm[:max_num]
-        links = (links[0][perm], links[1][perm])
-        labels = labels[perm]
     print('Enclosing subgraph extraction begins...')
     g_list = []
     if not parallel:
