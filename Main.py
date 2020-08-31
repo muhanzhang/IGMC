@@ -65,6 +65,10 @@ parser.add_argument('--save-appendix', default='',
                     help='what to append to save-names when saving results')
 parser.add_argument('--max-train-num', type=int, default=None, 
                     help='set maximum number of train data to use')
+parser.add_argument('--max-val-num', type=int, default=None, 
+                    help='set maximum number of val data to use')
+parser.add_argument('--max-test-num', type=int, default=None, 
+                    help='set maximum number of test data to use')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--data-seed', type=int, default=1234, metavar='S',
@@ -280,11 +284,10 @@ train_indices = (train_u_indices, train_v_indices)
 val_indices = (val_u_indices, val_v_indices)
 test_indices = (test_u_indices, test_v_indices)
 print('#train: %d, #val: %d, #test: %d' % (
-    len(train_u_indices) if not args.max_train_num else args.max_train_num, 
+    len(train_u_indices), 
     len(val_u_indices), 
     len(test_u_indices), 
 ))
-
 
 '''
     Extract enclosing subgraphs to build the train/test or train/val/test graph datasets.
@@ -329,6 +332,7 @@ test_graphs = eval(dataset_class)(
     u_features, 
     v_features, 
     class_values, 
+    max_num=args.max_test_num
 )
 if not args.testing:
     dataset_class = 'MyDynamicDataset' if args.dynamic_val else 'MyDataset'
@@ -343,12 +347,17 @@ if not args.testing:
         u_features, 
         v_features, 
         class_values, 
+        max_num=args.max_val_num
     )
 
 # Determine testing data (on which data to evaluate the trained model
 if not args.testing: 
     test_graphs = val_graphs
 
+print('Used #train graphs: %d, #test graphs: %d' % (
+    len(train_graphs), 
+    len(test_graphs), 
+))
 
 '''
     Train and apply the GNN model
