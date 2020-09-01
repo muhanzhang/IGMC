@@ -37,10 +37,18 @@ def train_multiple_epochs(train_dataset,
 
     rmses = []
 
+    if train_dataset.__class__.__name__ == 'MyDynamicDataset':
+        num_workers = mp.cpu_count()
+    else:
+        num_workers = 2
     train_loader = DataLoader(train_dataset, batch_size, shuffle=True, 
-                              num_workers=mp.cpu_count()*2)
+                              num_workers=num_workers)
+    if test_dataset.__class__.__name__ == 'MyDynamicDataset':
+        num_workers = mp.cpu_count()
+    else:
+        num_workers = 2
     test_loader = DataLoader(test_dataset, batch_size, shuffle=False, 
-                             num_workers=mp.cpu_count()*2)
+                             num_workers=num_workers)
 
     model.to(device).reset_parameters()
     optimizer = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)

@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 import sys, copy, math, time, pdb, warnings, traceback
-import pickle
 import scipy.io as sio
 import scipy.sparse as ssp
 import os.path
@@ -210,7 +209,7 @@ with open(os.path.join(args.res_dir, 'cmd_input.txt'), 'a') as f:
     f.write(cmd_input)
 print('Command line input: ' + cmd_input + ' is saved.')
 
-if args.data_name == 'ml_1m' or args.data_name == 'ml_10m':
+if args.data_name in ['ml_1m', 'ml_10m', 'ml_25m']:
     if args.use_features:
         datasplit_path = (
             'raw_data/' + args.data_name + '/withfeatures_split_seed' + 
