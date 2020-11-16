@@ -19,9 +19,10 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 class MyDataset(InMemoryDataset):
-    def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop, 
+    def __init__(self, root, A, Acsc, links, labels, h, sample_ratio, max_nodes_per_hop, 
                  u_features, v_features, class_values, max_num=None, parallel=True):
         self.A = A
+        self.Acsc = Acsc
         self.links = links
         self.labels = labels
         self.h = h
@@ -51,7 +52,7 @@ class MyDataset(InMemoryDataset):
 
     def process(self):
         # Extract enclosing subgraphs and save to disk
-        data_list = links2subgraphs(self.A, self.links, self.labels, self.h, 
+        data_list = links2subgraphs(self.A, self.Acsc, self.links, self.labels, self.h, 
                                     self.sample_ratio, self.max_nodes_per_hop, 
                                     self.u_features, self.v_features, 
                                     self.class_values, self.parallel)
@@ -62,10 +63,11 @@ class MyDataset(InMemoryDataset):
 
 
 class MyDynamicDataset(Dataset):
-    def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop, 
+    def __init__(self, root, A, Acsc, links, labels, h, sample_ratio, max_nodes_per_hop, 
                  u_features, v_features, class_values, max_num=None):
         super(MyDynamicDataset, self).__init__(root)
         self.A = A
+        self.Acsc = Acsc
         self.links = links
         self.labels = labels
         self.h = h
@@ -89,13 +91,14 @@ class MyDynamicDataset(Dataset):
         i, j = self.links[0][idx], self.links[1][idx]
         g_label = self.labels[idx]
         tmp = subgraph_extraction_labeling(
-            (i, j), self.A, self.h, self.sample_ratio, self.max_nodes_per_hop, 
+            (i, j), self.A, self.Acsc, self.h, self.sample_ratio, self.max_nodes_per_hop, 
             self.u_features, self.v_features, self.class_values, g_label
         )
         return construct_pyg_graph(*tmp)
 
 
 def links2subgraphs(A,
+                    Acsc,
                     links, 
                     labels, 
                     h=1, 
@@ -112,7 +115,7 @@ def links2subgraphs(A,
         with tqdm(total=len(links[0])) as pbar:
             for i, j, g_label in zip(links[0], links[1], labels):
                 tmp = subgraph_extraction_labeling(
-                    (i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
+                    (i, j), A, Acsc, h, sample_ratio, max_nodes_per_hop, u_features, 
                     v_features, class_values, g_label
                 )
                 data = construct_pyg_graph(*tmp)
@@ -124,7 +127,7 @@ def links2subgraphs(A,
         results = pool.starmap_async(
             subgraph_extraction_labeling, 
             [
-                ((i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
+                ((i, j), A, Acsc, h, sample_ratio, max_nodes_per_hop, u_features, 
                 v_features, class_values, g_label) 
                 for i, j, g_label in zip(links[0], links[1], labels)
             ]
@@ -155,7 +158,7 @@ def links2subgraphs(A,
 
 
 
-def subgraph_extraction_labeling(ind, A, h=1, sample_ratio=1.0, max_nodes_per_hop=None, 
+def subgraph_extraction_labeling(ind, A, Acsc, h=1, sample_ratio=1.0, max_nodes_per_hop=None, 
                                  u_features=None, v_features=None, class_values=None, 
                                  y=1):
     # extract the h-hop enclosing subgraph around link 'ind'
@@ -165,7 +168,7 @@ def subgraph_extraction_labeling(ind, A, h=1, sample_ratio=1.0, max_nodes_per_ho
     u_visited, v_visited = set([ind[0]]), set([ind[1]])
     u_fringe, v_fringe = set([ind[0]]), set([ind[1]])
     for dist in range(1, h+1):
-        v_fringe, u_fringe = neighbors(u_fringe, A, True), neighbors(v_fringe, A, False)
+        v_fringe, u_fringe = neighbors(u_fringe, A, True), neighbors(v_fringe, Acsc, False)
         u_fringe = u_fringe - u_visited
         v_fringe = v_fringe - v_visited
         u_visited = u_visited.union(u_fringe)
