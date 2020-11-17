@@ -253,14 +253,11 @@ def construct_pyg_graph(u, v, r, node_labels, max_node_label, y, node_features):
    
 def neighbors(fringe, A, row=True):
     # find all 1-hop neighbors of nodes in fringe from A
-    res = set()
-    for node in fringe:
-        if row:
-            _, nei, _ = ssp.find(A[node, :])
-        else:
-            nei, _, _ = ssp.find(A[:, node])
-        nei = set(nei)
-        res = res.union(nei)
+    if row:
+        _, res, _ = ssp.find(A[list(fringe), :])
+    else:
+        res, _, _ = ssp.find(A[:, list(fringe)])
+    res = set(res)
     return res
 
 
