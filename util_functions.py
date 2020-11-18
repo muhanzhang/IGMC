@@ -93,16 +93,13 @@ class MyDynamicDataset(Dataset):
         return len(self.links[0])
 
     def get(self, idx):
-        s = time.time()
         i, j = self.links[0][idx], self.links[1][idx]
         g_label = self.labels[idx]
         tmp = subgraph_extraction_labeling(
             (i, j), self.A, self.Acsc, self.Aridxer, self.Acidxer, self.h, self.sample_ratio, self.max_nodes_per_hop,
             self.u_features, self.v_features, self.class_values, g_label
         )
-        s = time_passed("tmp",s)
         pygg = construct_pyg_graph(*tmp)
-        s = time_passed("pygg", s)
         return pygg
 
 
@@ -169,9 +166,7 @@ def links2subgraphs(A,
 def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_ratio=1.0, max_nodes_per_hop=None,
                                  u_features=None, v_features=None, class_values=None, 
                                  y=1):
-    s = time.time()
     # extract the h-hop enclosing subgraph around link 'ind'
-    dist = 0
     u_nodes, v_nodes = [ind[0]], [ind[1]]
     u_dist, v_dist = [0], [0]
     u_visited, v_visited = set([ind[0]]), set([ind[1]])
@@ -199,7 +194,6 @@ def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_rat
     subgraph = Aridxer[u_nodes][:, v_nodes]
     # remove link between target nodes
     subgraph[0, 0] = 0
-    s = time_passed("sun",s)
     # prepare pyg graph constructor input
     u, v, r = ssp.find(subgraph)  # r is 1, 2... (rating labels + 1)
     v += len(u_nodes)
