@@ -166,30 +166,6 @@ def links2subgraphs(A,
         print("Time eplased for transforming to pytorch_geometric graphs: {}s".format(end2-end))
     return g_list
 
-
-# 176: 0.000006
-# 178: 0.005504
-# 181: 0.000017
-# 184: 0.000011
-# ifs: 0.000005
-# nodes: 0.000014
-# dsit: 0.000009
-# sun: 0.005269
-# ssp: 0.000373
-# 242: 0.000049
-# tmp: 0.011431
-
-# 176: 0.000007
-# 178: 0.001809
-# 181: 0.000012
-# 184: 0.000008
-# ifs: 0.000007
-# nodes: 0.000014
-# dsit: 0.000006
-# sun: 0.003766
-# ssp: 0.000756
-# 242: 0.000044
-# tmp: 0.006569
 def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_ratio=1.0, max_nodes_per_hop=None,
                                  u_features=None, v_features=None, class_values=None, 
                                  y=1):
@@ -201,15 +177,11 @@ def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_rat
     u_visited, v_visited = set([ind[0]]), set([ind[1]])
     u_fringe, v_fringe = set([ind[0]]), set([ind[1]])
     for dist in range(1, h+1):
-        s = time_passed("176",s)
         v_fringe, u_fringe = neighbors(u_fringe, Aridxer), neighbors(v_fringe, Acidxer, False)
-        s = time_passed("178",s)
         u_fringe = u_fringe - u_visited
         v_fringe = v_fringe - v_visited
-        s = time_passed("181",s)
         u_visited = u_visited.union(u_fringe)
         v_visited = v_visited.union(v_fringe)
-        s = time_passed("184",s)
         if sample_ratio < 1.0:
             u_fringe = random.sample(u_fringe, int(sample_ratio*len(u_fringe)))
             v_fringe = random.sample(v_fringe, int(sample_ratio*len(v_fringe)))
@@ -220,20 +192,16 @@ def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_rat
                 v_fringe = random.sample(v_fringe, max_nodes_per_hop)
         if len(u_fringe) == 0 and len(v_fringe) == 0:
             break
-        s = time_passed("ifs",s)
         u_nodes = u_nodes + list(u_fringe)
         v_nodes = v_nodes + list(v_fringe)
-        s = time_passed("nodes",s)
         u_dist = u_dist + [dist] * len(u_fringe)
         v_dist = v_dist + [dist] * len(v_fringe)
-        s = time_passed("dsit",s)
     subgraph = Aridxer[u_nodes][:, v_nodes]
     # remove link between target nodes
     subgraph[0, 0] = 0
     s = time_passed("sun",s)
     # prepare pyg graph constructor input
     u, v, r = ssp.find(subgraph)  # r is 1, 2... (rating labels + 1)
-    s = time_passed("ssp",s)
     v += len(u_nodes)
     r = r - 1  # transform r back to rating label
     num_nodes = len(u_nodes) + len(v_nodes)
@@ -267,7 +235,6 @@ def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_rat
         # only output node features for the target user and item
         if u_features is not None and v_features is not None:
             node_features = [u_features[0], v_features[0]]
-    s = time_passed("242",s)
     return u, v, r, node_labels, max_node_label, y, node_features
 
 
