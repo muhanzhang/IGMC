@@ -1,3 +1,6 @@
+# Fast indexing due to saving each row/col in a separate array. 
+# https://stackoverflow.com/a/50860352/13977781
+
 import numpy as np
 import scipy.sparse as sp
 
@@ -23,18 +26,7 @@ class SparseRowIndexer:
         indices = np.concatenate(self.indices[row_selector])
         data = np.concatenate(self.data[row_selector])
         indptr = np.append(0, np.cumsum(self.indptr[row_selector]))
-        # if col_selector:
-        #     mask = [c in col_selector for c in indices]
-        #     indices = indices[mask]
-        #     for i,c in enumerate(np.sort(col_selector)):
-        #         indices[indices==c] = i
-        #     data = data[mask]
-        #     for i in range(indptr.size-1):
-        #         indptr[i+1] = indptr[i] + np.sum(mask[indptr[i]:indptr[i+1]])
-        #
-        #     shape = [indptr.shape[0] - 1, len(col_selector)]
-        # else:
-
+        
         shape = [indptr.shape[0] - 1, self.n_columns]
         return sp.csr_matrix((data, indices, indptr), shape=shape)
 
@@ -44,8 +36,6 @@ class SparseColIndexer:
         indices = []
         indptr = []
 
-        # Iterating over the rows this way is significantly more efficient
-        # than csr_matrix[row_index,:] and csr_matrix.getrow(row_index)
         for col_start, col_end in zip(csc_matrix.indptr[:-1], csc_matrix.indptr[1:]):
             data.append(csc_matrix.data[col_start:col_end])
             indices.append(csc_matrix.indices[col_start:col_end])
