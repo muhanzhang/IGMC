@@ -23,6 +23,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def train_multiple_epochs(train_dataset,
                           test_dataset,
                           model,
+                          optimizer = None,
                           epochs,
                           batch_size,
                           lr,
@@ -51,7 +52,8 @@ def train_multiple_epochs(train_dataset,
                              num_workers=num_workers)
 
     model.to(device).reset_parameters()
-    optimizer = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    if optimizer == None:
+         optimizer = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     start_epoch = 1
     if continue_from is not None:
         model.load_state_dict(
