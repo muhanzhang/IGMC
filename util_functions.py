@@ -9,7 +9,6 @@ import networkx as nx
 import argparse
 import scipy.io as sio
 import scipy.sparse as ssp
-from sparseindexer import SparseRowIndexer, SparseColIndexer
 import torch
 from torch_geometric.data import Data, Dataset, InMemoryDataset
 import warnings
