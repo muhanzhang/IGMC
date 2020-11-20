@@ -66,13 +66,13 @@ class MyDataset(InMemoryDataset):
         del data_list
 
 class MyDynamicDataset(Dataset):
-    def __init__(self, root, A, Acsc, links, labels, h, sample_ratio, max_nodes_per_hop,
+    def __init__(self, root, Aridxer, Acidxer, links, labels, h, sample_ratio, max_nodes_per_hop,
                  u_features, v_features, class_values, max_num=None):
         super(MyDynamicDataset, self).__init__(root)
-        self.A = A
-        self.Acsc = Acsc
-        self.Aridxer = SparseRowIndexer(A)
-        self.Acidxer = SparseColIndexer(Acsc)
+#         self.A = A
+#         self.Acsc = Acsc
+        self.Aridxer = Aridxer
+        self.Acidxer = Acidxer
         self.links = links
         self.labels = labels
         self.h = h
@@ -96,7 +96,7 @@ class MyDynamicDataset(Dataset):
         i, j = self.links[0][idx], self.links[1][idx]
         g_label = self.labels[idx]
         tmp = subgraph_extraction_labeling(
-            (i, j), self.A, self.Acsc, self.Aridxer, self.Acidxer, self.h, self.sample_ratio, self.max_nodes_per_hop,
+            (i, j), self.Aridxer, self.Acidxer, self.h, self.sample_ratio, self.max_nodes_per_hop,
             self.u_features, self.v_features, self.class_values, g_label
         )
         pygg = construct_pyg_graph(*tmp)
@@ -163,7 +163,7 @@ def links2subgraphs(A,
         print("Time eplased for transforming to pytorch_geometric graphs: {}s".format(end2-end))
     return g_list
 
-def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_ratio=1.0, max_nodes_per_hop=None,
+def subgraph_extraction_labeling(ind, Aridxer, Acidxer, h=1, sample_ratio=1.0, max_nodes_per_hop=None,
                                  u_features=None, v_features=None, class_values=None, 
                                  y=1):
     # extract the h-hop enclosing subgraph around link 'ind'
@@ -218,13 +218,13 @@ def subgraph_extraction_labeling(ind, A, Acsc, Aridxer, Acidxer, h=1, sample_rat
                 [np.zeros([v_features.shape[0], u_features.shape[1]]), v_features], 1
             )
             node_features = np.concatenate([u_extended, v_extended], 0)
-    if False:
-        # use identity features (one-hot encodings of node idxes)
-        u_ids = one_hot(u_nodes, A.shape[0] + A.shape[1])
-        v_ids = one_hot([x+A.shape[0] for x in v_nodes], A.shape[0] + A.shape[1])
-        node_ids = np.concatenate([u_ids, v_ids], 0)
-        #node_features = np.concatenate([node_features, node_ids], 1)
-        node_features = node_ids
+#     if False:
+#         # use identity features (one-hot encodings of node idxes)
+#         u_ids = one_hot(u_nodes, A.shape[0] + A.shape[1])
+#         v_ids = one_hot([x+A.shape[0] for x in v_nodes], A.shape[0] + A.shape[1])
+#         node_ids = np.concatenate([u_ids, v_ids], 0)
+#         #node_features = np.concatenate([node_features, node_ids], 1)
+#         node_features = node_ids
     if True:
         # only output node features for the target user and item
         if u_features is not None and v_features is not None:
