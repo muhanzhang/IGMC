@@ -27,20 +27,22 @@ def logger(info, model, optimizer, res_dir, save_interval = 3):
             torch.save(optimizer.state_dict(), optimizer_name)
 
 
-def neighbor_songs(ind, A, Acsc, sample_ratio=1,
+def neighbor_songs(pl, A, Acsc, sample_ratio=1,
                    max_nodes_per_hop=None):
-    u_nodes, v_nodes = [ind[0]], [ind[1]]
+
+    songs = set(Acsc[pl].indices)
+    u_nodes, v_nodes = list(songs), [pl]
     # u_dist, v_dist = [0], [0]
-    u_visited, v_visited = set([ind[0]]), set([ind[1]])
-    u_fringe, v_fringe = set([ind[0]]), set([ind[1]])
+    u_visited, v_visited = songs, set(v_nodes)
+    u_fringe, v_fringe = songs, set(v_nodes)
     # for dist in range(1, h+1):
 
-    u_fringe = neighbors(v_fringe, Acsc, False)
+    # u_fringe = neighbors(v_fringe, Acsc, False)
     v_fringe = neighbors(u_fringe, A, True)
 
-    u_fringe = u_fringe - u_visited
+    # u_fringe = u_fringe - u_visited
     v_fringe = v_fringe - v_visited
-    u_visited = u_visited.union(u_fringe)
+    # u_visited = u_visited.union(u_fringe)
     v_visited = v_visited.union(v_fringe)
     if sample_ratio < 1.0:
         u_fringe = random.sample(u_fringe, int(sample_ratio * len(u_fringe)))
@@ -52,7 +54,7 @@ def neighbor_songs(ind, A, Acsc, sample_ratio=1,
             v_fringe = random.sample(v_fringe, max_nodes_per_hop)
     # if len(u_fringe) == 0 and len(v_fringe) == 0:
     #     break
-    u_nodes = u_nodes + list(u_fringe)
+    # u_nodes = u_nodes + list(u_fringe)
     v_nodes = v_nodes + list(v_fringe)
 
     u_fringe = neighbors(v_fringe, Acsc, False)

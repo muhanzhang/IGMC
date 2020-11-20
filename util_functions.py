@@ -255,10 +255,9 @@ def construct_pyg_graph(u, v, r, node_labels, max_node_label, y, node_features):
 def neighbors(fringe, A, row=True):
     # find all 1-hop neighbors of nodes in fringe from A
     if row:
-        _, res, _ = ssp.find(A[list(fringe)])
+        res = set(A[list(fringe)].indices)
     else:
-        res, _, _ = ssp.find(A[list(fringe)])
-    res = set(res)
+        res = set(A[list(fringe)].indices)
     return res
 
 
