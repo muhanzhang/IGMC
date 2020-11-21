@@ -1,9 +1,9 @@
-import json
 from util_functions import neighbors, MyDynamicDataset
 from sparseindexer import *
 import os
 import torch
 import random
+import numpy as np
 from models import *
 from train_eval import *
 
@@ -30,7 +30,7 @@ def logger(info, model, optimizer, res_dir, save_interval = 3):
 def neighbor_songs(pl, A, Acsc, sample_ratio=1,
                    max_nodes_per_hop=None):
 
-    songs = set(Acsc[pl].indices)
+    songs = set(Acsc[[pl]].indices)
     u_nodes, v_nodes = list(songs), [pl]
     # u_dist, v_dist = [0], [0]
     u_visited, v_visited = songs, set(v_nodes)
@@ -144,7 +144,10 @@ def r_precision(G, R):
 
 def load_data(file_dir = "drive/My Drive/music recommendation/",
               train_size = 10000,
-              val_split = 0.01):
+              val_split = 0.01,
+              sample_ratio = 1,
+              max_nodes = 10000,
+              save_appx = ""):
     adj_train = sp.load_npz(file_dir + "spotify_mpd.npz")
     adj_train = sp.csr_matrix.astype(adj_train, np.int8)
     adj_train_csc = adj_train.tocsc()
@@ -186,7 +189,7 @@ def load_data(file_dir = "drive/My Drive/music recommendation/",
     n_features = 0
 
     appx = "_" + str(train_size)[:-3] + "k"
-    save_appx = ""
+    save_appx = save_appx
     data_name = "spotify"
     dataset_class = 'MyDynamicDataset' if True else 'MyDataset'
     data_combo = (data_name, appx, save_appx)
@@ -201,8 +204,8 @@ def load_data(file_dir = "drive/My Drive/music recommendation/",
         train_indices,
         train_labels,
         1,  # args.hop
-        1,  # args.sample_ratio,
-        10000,  # args.max_nodes_per_hop,
+        sample_ratio,  # args.sample_ratio,
+        max_nodes,  # args.max_nodes_per_hop,
         u_features,
         v_features,
         class_values = np.array([0,1]),
@@ -217,8 +220,8 @@ def load_data(file_dir = "drive/My Drive/music recommendation/",
         val_indices,
         val_labels,
         1,  # args.hop
-        1,  # args.sample_ratio,
-        10000,  # args.max_nodes_per_hop,
+        sample_ratio,  # args.sample_ratio,
+        max_nodes,  # args.max_nodes_per_hop,
         u_features,
         v_features,
         class_values = np.array([0,1]),
