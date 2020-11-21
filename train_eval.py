@@ -34,7 +34,8 @@ def train_multiple_epochs(train_dataset,
                           optimizer = None,
                           logger=None, 
                           continue_from=None, 
-                          res_dir=None):
+                          res_dir=None,
+                          save_interval = 3):
 
     rmses = []
 
@@ -98,7 +99,8 @@ def train_multiple_epochs(train_dataset,
                 param_group['lr'] = lr_decay_factor * param_group['lr']
 
         if logger is not None:
-            logger(eval_info, model, optimizer)
+            logger(eval_info, model, optimizer, res_dir = res_dir, save_interval = save_interval
+                   )
 
     if torch.cuda.is_available():
         torch.cuda.synchronize()
