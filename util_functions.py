@@ -68,7 +68,7 @@ class SparseColIndexer:
 
 class MyDataset(InMemoryDataset):
     def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop,
-                 u_features, v_features, class_values, max_num=None, parallel=False):
+                 u_features, v_features, class_values, max_num=None, parallel=True):
         self.Arow = SparseRowIndexer(A)
         self.Acol = SparseColIndexer(A.tocsc())
         self.links = links
