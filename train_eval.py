@@ -31,11 +31,9 @@ def train_multiple_epochs(train_dataset,
                           weight_decay,
                           ARR=0, 
                           test_freq=1,
-                          optimizer = None,
                           logger=None, 
                           continue_from=None, 
-                          res_dir=None,
-                          save_interval = 3):
+                          res_dir=None):
 
     rmses = []
 
@@ -53,8 +51,7 @@ def train_multiple_epochs(train_dataset,
                              num_workers=num_workers)
 
     model.to(device).reset_parameters()
-    if optimizer == None:
-         optimizer = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     start_epoch = 1
     if continue_from is not None:
         model.load_state_dict(
@@ -99,8 +96,7 @@ def train_multiple_epochs(train_dataset,
                 param_group['lr'] = lr_decay_factor * param_group['lr']
 
         if logger is not None:
-            logger(eval_info, model, optimizer, res_dir = res_dir, save_interval = save_interval
-                   )
+            logger(eval_info, model, optimizer)
 
     if torch.cuda.is_available():
         torch.cuda.synchronize()
@@ -171,8 +167,8 @@ def train(model, optimizer, loader, device, regression=False, ARR=0,
         if ARR != 0:
             for gconv in model.convs:
                 w = torch.matmul(
-                    gconv.comp, 
-                    gconv.weight.view(gconv.num_bases, -1)
+                    gconv.att,
+                    gconv.basis.view(gconv.num_bases, -1)
                 ).view(gconv.num_relations, gconv.in_channels, gconv.out_channels)
                 reg_loss = torch.sum((w[1:, :, :] - w[:-1, :, :])**2)
                 loss += ARR * reg_loss

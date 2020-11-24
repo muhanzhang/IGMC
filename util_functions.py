@@ -17,15 +17,60 @@ cur_dir = os.path.dirname(os.path.realpath(__file__))
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
-def time_passed(name,s):
-  print(name + ": %f" %(time.time()-s))
-  return time.time()
+class SparseRowIndexer:
+    def __init__(self, csr_matrix):
+        data = []
+        indices = []
+        indptr = []
+
+        for row_start, row_end in zip(csr_matrix.indptr[:-1], csr_matrix.indptr[1:]):
+            data.append(csr_matrix.data[row_start:row_end])
+            indices.append(csr_matrix.indices[row_start:row_end])
+            indptr.append(row_end - row_start)  # nnz of the row
+
+        self.data = np.array(data, dtype=object)
+        self.indices = np.array(indices, dtype=object)
+        self.indptr = np.array(indptr, dtype=object)
+        self.shape = csr_matrix.shape
+
+    def __getitem__(self, row_selector):
+        indices = np.concatenate(self.indices[row_selector])
+        data = np.concatenate(self.data[row_selector])
+        indptr = np.append(0, np.cumsum(self.indptr[row_selector]))
+        shape = [indptr.shape[0] - 1, self.shape[1]]
+        return ssp.csr_matrix((data, indices, indptr), shape=shape)
+
+
+class SparseColIndexer:
+    def __init__(self, csc_matrix):
+        data = []
+        indices = []
+        indptr = []
+
+        for col_start, col_end in zip(csc_matrix.indptr[:-1], csc_matrix.indptr[1:]):
+            data.append(csc_matrix.data[col_start:col_end])
+            indices.append(csc_matrix.indices[col_start:col_end])
+            indptr.append(col_end - col_start)
+
+        self.data = np.array(data, dtype=object)
+        self.indices = np.array(indices, dtype=object)
+        self.indptr = np.array(indptr, dtype=object)
+        self.shape = csc_matrix.shape
+
+    def __getitem__(self, col_selector):
+        indices = np.concatenate(self.indices[col_selector])
+        data = np.concatenate(self.data[col_selector])
+        indptr = np.append(0, np.cumsum(self.indptr[col_selector]))
+
+        shape = [self.shape[0], indptr.shape[0] - 1]
+        return ssp.csc_matrix((data, indices, indptr), shape=shape)
+
 
 class MyDataset(InMemoryDataset):
-    def __init__(self, root, A, Acsc, links, labels, h, sample_ratio, max_nodes_per_hop,
-                 u_features, v_features, class_values, max_num=None, parallel=True):
-        self.A = A
-        self.Acsc = Acsc
+    def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop,
+                 u_features, v_features, class_values, max_num=None, parallel=False):
+        self.Arow = SparseRowIndexer(A)
+        self.Acol = SparseColIndexer(A.tocsc())
         self.links = links
         self.labels = labels
         self.h = h
@@ -55,23 +100,22 @@ class MyDataset(InMemoryDataset):
 
     def process(self):
         # Extract enclosing subgraphs and save to disk
-        data_list = links2subgraphs(self.A, self.Acsc, self.links, self.labels, self.h,
-                                    self.sample_ratio, self.max_nodes_per_hop, 
-                                    self.u_features, self.v_features, 
+        data_list = links2subgraphs(self.Arow, self.Acol, self.links, self.labels, self.h,
+                                    self.sample_ratio, self.max_nodes_per_hop,
+                                    self.u_features, self.v_features,
                                     self.class_values, self.parallel)
 
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
         del data_list
 
+
 class MyDynamicDataset(Dataset):
-    def __init__(self, root, Aridxer, Acidxer, links, labels, h, sample_ratio, max_nodes_per_hop,
+    def __init__(self, root, A, links, labels, h, sample_ratio, max_nodes_per_hop,
                  u_features, v_features, class_values, max_num=None):
         super(MyDynamicDataset, self).__init__(root)
-#         self.A = A
-#         self.Acsc = Acsc
-        self.Aridxer = Aridxer
-        self.Acidxer = Acidxer
+        self.Arow = SparseRowIndexer(A)
+        self.Acol = SparseColIndexer(A.tocsc())
         self.links = links
         self.labels = labels
         self.h = h
@@ -95,23 +139,22 @@ class MyDynamicDataset(Dataset):
         i, j = self.links[0][idx], self.links[1][idx]
         g_label = self.labels[idx]
         tmp = subgraph_extraction_labeling(
-            (i, j), self.Aridxer, self.Acidxer, self.h, self.sample_ratio, self.max_nodes_per_hop,
+            (i, j), self.Arow, self.Acol, self.h, self.sample_ratio, self.max_nodes_per_hop,
             self.u_features, self.v_features, self.class_values, g_label
         )
-        pygg = construct_pyg_graph(*tmp)
-        return pygg
+        return construct_pyg_graph(*tmp)
 
 
-def links2subgraphs(A,
-                    Acsc,
-                    links, 
-                    labels, 
-                    h=1, 
-                    sample_ratio=1.0, 
-                    max_nodes_per_hop=None, 
-                    u_features=None, 
-                    v_features=None, 
-                    class_values=None, 
+def links2subgraphs(Arow,
+                    Acol,
+                    links,
+                    labels,
+                    h=1,
+                    sample_ratio=1.0,
+                    max_nodes_per_hop=None,
+                    u_features=None,
+                    v_features=None,
+                    class_values=None,
                     parallel=True):
     # extract enclosing subgraphs
     print('Enclosing subgraph extraction begins...')
@@ -119,9 +162,8 @@ def links2subgraphs(A,
     if not parallel:
         with tqdm(total=len(links[0])) as pbar:
             for i, j, g_label in zip(links[0], links[1], labels):
-
                 tmp = subgraph_extraction_labeling(
-                    (i, j), A, Acsc, h, sample_ratio, max_nodes_per_hop, u_features,
+                    (i, j), Arow, Acol, h, sample_ratio, max_nodes_per_hop, u_features,
                     v_features, class_values, g_label
                 )
                 data = construct_pyg_graph(*tmp)
@@ -131,10 +173,10 @@ def links2subgraphs(A,
         start = time.time()
         pool = mp.Pool(mp.cpu_count())
         results = pool.starmap_async(
-            subgraph_extraction_labeling, 
+            subgraph_extraction_labeling,
             [
-                ((i, j), A, h, sample_ratio, max_nodes_per_hop, u_features, 
-                v_features, class_values, g_label) 
+                ((i, j), Arow, Acol, h, sample_ratio, max_nodes_per_hop, u_features,
+                 v_features, class_values, g_label)
                 for i, j, g_label in zip(links[0], links[1], labels)
             ]
         )
@@ -149,7 +191,7 @@ def links2subgraphs(A,
         pool.close()
         pbar.close()
         end = time.time()
-        print("Time eplased for subgraph extraction: {}s".format(end-start))
+        print("Time elapsed for subgraph extraction: {}s".format(end - start))
         print("Transforming to pytorch_geometric graphs...")
         g_list = []
         pbar = tqdm(total=len(results))
@@ -159,11 +201,12 @@ def links2subgraphs(A,
             pbar.update(1)
         pbar.close()
         end2 = time.time()
-        print("Time eplased for transforming to pytorch_geometric graphs: {}s".format(end2-end))
+        print("Time elapsed for transforming to pytorch_geometric graphs: {}s".format(end2 - end))
     return g_list
 
-def subgraph_extraction_labeling(ind, Aridxer, Acidxer, h=1, sample_ratio=1.0, max_nodes_per_hop=None,
-                                 u_features=None, v_features=None, class_values=None, 
+
+def subgraph_extraction_labeling(ind, Arow, Acol, h=1, sample_ratio=1.0, max_nodes_per_hop=None,
+                                 u_features=None, v_features=None, class_values=None,
                                  y=1):
     # extract the h-hop enclosing subgraph around link 'ind'
     u_nodes, v_nodes = [ind[0]], [ind[1]]
@@ -171,14 +214,14 @@ def subgraph_extraction_labeling(ind, Aridxer, Acidxer, h=1, sample_ratio=1.0, m
     u_visited, v_visited = set([ind[0]]), set([ind[1]])
     u_fringe, v_fringe = set([ind[0]]), set([ind[1]])
     for dist in range(1, h+1):
-        v_fringe, u_fringe = neighbors(u_fringe, Aridxer), neighbors(v_fringe, Acidxer, False)
+        v_fringe, u_fringe = neighbors(u_fringe, Arow), neighbors(v_fringe, Acol)
         u_fringe = u_fringe - u_visited
         v_fringe = v_fringe - v_visited
         u_visited = u_visited.union(u_fringe)
         v_visited = v_visited.union(v_fringe)
         if sample_ratio < 1.0:
-            u_fringe = random.sample(u_fringe, int(sample_ratio*len(u_fringe)))
-            v_fringe = random.sample(v_fringe, int(sample_ratio*len(v_fringe)))
+            u_fringe = random.sample(u_fringe, int(sample_ratio * len(u_fringe)))
+            v_fringe = random.sample(v_fringe, int(sample_ratio * len(v_fringe)))
         if max_nodes_per_hop is not None:
             if max_nodes_per_hop < len(u_fringe):
                 u_fringe = random.sample(u_fringe, max_nodes_per_hop)
@@ -190,7 +233,7 @@ def subgraph_extraction_labeling(ind, Aridxer, Acidxer, h=1, sample_ratio=1.0, m
         v_nodes = v_nodes + list(v_fringe)
         u_dist = u_dist + [dist] * len(u_fringe)
         v_dist = v_dist + [dist] * len(v_fringe)
-    subgraph = Aridxer[u_nodes][:, v_nodes]
+    subgraph = Arow[u_nodes][:, v_nodes]
     # remove link between target nodes
     subgraph[0, 0] = 0
     # prepare pyg graph constructor input
@@ -217,13 +260,13 @@ def subgraph_extraction_labeling(ind, Aridxer, Acidxer, h=1, sample_ratio=1.0, m
                 [np.zeros([v_features.shape[0], u_features.shape[1]]), v_features], 1
             )
             node_features = np.concatenate([u_extended, v_extended], 0)
-#     if False:
-#         # use identity features (one-hot encodings of node idxes)
-#         u_ids = one_hot(u_nodes, A.shape[0] + A.shape[1])
-#         v_ids = one_hot([x+A.shape[0] for x in v_nodes], A.shape[0] + A.shape[1])
-#         node_ids = np.concatenate([u_ids, v_ids], 0)
-#         #node_features = np.concatenate([node_features, node_ids], 1)
-#         node_features = node_ids
+    if False:
+        # use identity features (one-hot encodings of node idxes)
+        u_ids = one_hot(u_nodes, Arow.shape[0] + Arow.shape[1])
+        v_ids = one_hot([x + Arow.shape[0] for x in v_nodes], Arow.shape[0] + Arow.shape[1])
+        node_ids = np.concatenate([u_ids, v_ids], 0)
+        # node_features = np.concatenate([node_features, node_ids], 1)
+        node_features = node_ids
     if True:
         # only output node features for the target user and item
         if u_features is not None and v_features is not None:
@@ -250,15 +293,10 @@ def construct_pyg_graph(u, v, r, node_labels, max_node_label, y, node_features):
             data.x = torch.cat([data.x, x2], 1)
     return data
 
-# column slicing is vert slow in csr format.
-# we need to provide CSC of A matrix when it is for cols
-def neighbors(fringe, A, row=True):
+
+def neighbors(fringe, A):
     # find all 1-hop neighbors of nodes in fringe from A
-    if row:
-        res = set(A[list(fringe)].indices)
-    else:
-        res = set(A[list(fringe)].indices)
-    return res
+    return set(A[list(fringe)].indices)
 
 
 def one_hot(idx, length):
@@ -279,4 +317,3 @@ def PyGGraph_to_nx(data):
     nx.set_node_attributes(g, name='type', values=node_types)
     g.graph['rating'] = data.y.item()
     return g
-

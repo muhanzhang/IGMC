@@ -306,11 +306,9 @@ if args.reprocess:
 # create dataset, either dynamically extract enclosing subgraphs, 
 # or extract in preprocessing and save to disk.
 dataset_class = 'MyDynamicDataset' if args.dynamic_train else 'MyDataset'
-adj_train_csc = adj_train.tocsc()
 train_graphs = eval(dataset_class)(
     'data/{}{}/{}/train'.format(*data_combo),
-    adj_train, 
-    adj_train_csc,
+    adj_train,
     train_indices, 
     train_labels, 
     args.hop, 
@@ -325,7 +323,6 @@ dataset_class = 'MyDynamicDataset' if args.dynamic_test else 'MyDataset'
 test_graphs = eval(dataset_class)(
     'data/{}{}/{}/test'.format(*data_combo),
     adj_train,
-    adj_train_csc, 
     test_indices, 
     test_labels, 
     args.hop, 
@@ -341,7 +338,6 @@ if not args.testing:
     val_graphs = eval(dataset_class)(
         'data/{}{}/{}/val'.format(*data_combo),
         adj_train,
-        adj_train_csc,
         val_indices, 
         val_labels, 
         args.hop, 
@@ -369,7 +365,6 @@ if False:
     # DGCNN_RS GNN model
     model = DGCNN_RS(
         train_graphs,
-        adj_train_csc,
         latent_dim=[32, 32, 32, 1], 
         k=0.6, 
         num_relations=len(class_values), 
