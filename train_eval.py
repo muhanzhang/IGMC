@@ -30,7 +30,7 @@ def train_multiple_epochs(train_dataset,
                           lr_decay_step_size,
                           weight_decay,
                           ARR=0, 
-                          test_freq=1,
+                          test_freq=1, 
                           logger=None, 
                           continue_from=None, 
                           res_dir=None):
@@ -167,7 +167,7 @@ def train(model, optimizer, loader, device, regression=False, ARR=0,
         if ARR != 0:
             for gconv in model.convs:
                 w = torch.matmul(
-                    gconv.att,
+                    gconv.att, 
                     gconv.basis.view(gconv.num_bases, -1)
                 ).view(gconv.num_relations, gconv.in_channels, gconv.out_channels)
                 reg_loss = torch.sum((w[1:, :, :] - w[:-1, :, :])**2)
