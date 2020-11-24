@@ -3,11 +3,6 @@ IGMC -- Inductive Graph-based Matrix Completion
 
 ![alt text](https://github.com/muhanzhang/IGMC/raw/master/overall2.svg?sanitize=true "Illustration of IGMC")
 
-Fork Edit
------
-Subgraph extraction is optimized. Training/inference is ~20x faster. (Only tested in Spotify Million Playlist Dataset)
-
-
 Update
 ------
 8/27/2020: Significantly improved the subgraph extraction speed. With an 8-core machine, now it only takes 30 seconds and 10 minutes to extract subgraphs for ml_100k and ml_1m, respectively. Using --dynamic-dataset also shows about 50% speed-up.
