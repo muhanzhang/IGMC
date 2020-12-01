@@ -200,12 +200,12 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
     class_values = np.sort(np.unique(ratings))
 
     # make training adjacency matrix
-    rating_mx_train = np.zeros(num_users * num_items, dtype=np.float32)
     if post_rating_map is None:
-        rating_mx_train[train_idx] = labels[train_idx].astype(np.float32) + 1.
+        data = labels[train_idx].astype(np.float32) + 1.
     else:
-        rating_mx_train[train_idx] = np.array([post_rating_map[r] for r in class_values[labels[train_idx]]]) + 1.
-    rating_mx_train = sp.csr_matrix(rating_mx_train.reshape(num_users, num_items))
+        data = np.array([post_rating_map[r] for r in class_values[labels[train_idx]]]) + 1.
+    rating_mx_train = sp.csr_matrix((data, [u_train_idx, v_train_idx]), 
+                                    shape=[num_users, num_items], dtype=np.float32)
 
     return u_features, v_features, rating_mx_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
