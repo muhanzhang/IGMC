@@ -146,13 +146,7 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
         for i, x in enumerate(ratings):
             ratings[i] = rating_map[x]
 
-    neutral_rating = -1
-
     rating_dict = {r: i for i, r in enumerate(np.sort(np.unique(ratings)).tolist())}
-
-    labels = np.full((num_users, num_items), neutral_rating, dtype=np.int32)
-    labels[u_nodes, v_nodes] = np.array([rating_dict[r] for r in ratings])
-    labels = labels.reshape([-1])
 
     # number of test and validation edges
     if dataset == 'ml_25m':
@@ -169,13 +163,7 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
             num_val = int(np.ceil(ratings.shape[0] * 0.9 * 0.05))
         num_train = ratings.shape[0] - num_val - num_test
 
-    pairs_nonzero = np.array([[u, v] for u, v in zip(u_nodes, v_nodes)])
-
-    idx_nonzero = np.array([u * num_items + v for u, v in pairs_nonzero])
-
-    train_idx = idx_nonzero[0:int(num_train*ratio)]
-    val_idx = idx_nonzero[num_train:num_train + num_val]
-    test_idx = idx_nonzero[num_train + num_val:]
+    pairs_nonzero = np.vstack([u_nodes, v_nodes]).transpose()
 
     train_pairs_idx = pairs_nonzero[0:int(num_train*ratio)]
     val_pairs_idx = pairs_nonzero[num_train:num_train + num_val]
@@ -186,24 +174,25 @@ def create_trainvaltest_split(dataset, seed=1234, testing=False, datasplit_path=
     u_train_idx, v_train_idx = train_pairs_idx.transpose()
 
     # create labels
-    train_labels = labels[train_idx]
-    val_labels = labels[val_idx]
-    test_labels = labels[test_idx]
+    all_labels = np.array([rating_dict[r] for r in ratings], dtype=np.int32)
+    train_labels = all_labels[0:int(num_train*ratio)]
+    val_labels = all_labels[num_train:num_train + num_val]
+    test_labels = all_labels[num_train + num_val:]
 
     if testing:
         u_train_idx = np.hstack([u_train_idx, u_val_idx])
         v_train_idx = np.hstack([v_train_idx, v_val_idx])
         train_labels = np.hstack([train_labels, val_labels])
-        # for adjacency matrix construction
-        train_idx = np.hstack([train_idx, val_idx])
 
     class_values = np.sort(np.unique(ratings))
 
     # make training adjacency matrix
     if post_rating_map is None:
-        data = labels[train_idx].astype(np.float32) + 1.
+        data = train_labels + 1.
     else:
-        data = np.array([post_rating_map[r] for r in class_values[labels[train_idx]]]) + 1.
+        data = np.array([post_rating_map[r] for r in class_values[train_labels]]) + 1.
+    data = data.astype(np.float32)
+
     rating_mx_train = sp.csr_matrix((data, [u_train_idx, v_train_idx]), 
                                     shape=[num_users, num_items], dtype=np.float32)
 
