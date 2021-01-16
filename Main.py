@@ -398,6 +398,9 @@ else:
         n_side_features=n_features, 
         multiply_by=multiply_by
     )
+    total_params = sum(p.numel() for param in model.parameters() for p in param)
+    print(f'Total number of parameters is {total_params}')
+    
 
 if not args.no_train:
     train_multiple_epochs(
