@@ -1,0 +1,1 @@
+python Main.py --data-name douban --epochs 40 --testing --no-train --ensemble --transfer results/flixster_testmode/ --dynamic-test --num-relations 5 --multiply-by 1

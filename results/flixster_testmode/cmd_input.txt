@@ -1,0 +1,13 @@
+python Main.py --data-name flixster --epochs 1 --testing --ensemble
+python Main.py --data-name flixster --epochs 40 --testing --ensemble
+python Main.py --data-name flixster --epochs 1 --testing --ensemble
+python Main.py --data-name flixster --epochs 5 --testing --ensemble
+python Main.py --data-name flixster --epochs 5 --testing --ensemble
+python Main.py --data-name flixster --epochs 5 --testing --ensemble
+python Main.py --data-name flixster --epochs 1 --testing --ensemble
+python Main.py --data-name flixster --epochs 1 --testing --ensemble --save-interval 1
+python Main.py --data-name flixster --epochs 1 --testing --ensemble --save-interval 0
+python Main.py --data-name flixster --epochs 6 --testing --ensemble --save-interval 2
+python Main.py --data-name flixster --epochs 40 --testing --ensemble --save-interval 1
+python Main.py --data-name flixster --epochs 40 --testing --no-train --ensemble --transfer results/flixster_testmode/ --dynamic-test --num-relations 5 --multiply-by 1
+python Main.py --data-name flixster --epochs 40 --testing --no-train --visualize

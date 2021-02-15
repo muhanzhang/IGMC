@@ -1,0 +1,5 @@
+python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 80 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train
+python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 1 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train --batch-size 25
+python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 30 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train --batch-size 25
+python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 30 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train --batch-size 25
+python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 1 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train --batch-size 25 --save-interval 1
