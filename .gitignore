@@ -1,8 +1,8 @@
-*.pyc
-*.swp
-backup/
-results/
-software/
-data/
-plot_figure.py
-__pycache__/
+# *.pyc
+# *.swp
+# backup/
+# results/
+# software/
+# data/
+# plot_figure.py
+# __pycache__/
