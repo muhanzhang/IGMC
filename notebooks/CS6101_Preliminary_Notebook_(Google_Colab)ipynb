@@ -1,0 +1,866 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "CS6101 Preliminary Notebook (Google Colab).ipynb",
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "accelerator": "GPU"
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "Xf4POslge0zZ"
+      },
+      "source": [
+        "# Git Clone and Installing of Packages"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "2fa8CzGBMuVM",
+        "outputId": "6f71b032-0d32-41ab-c4cb-0c78e357fedd"
+      },
+      "source": [
+        "# git clone\n",
+        "\n",
+        "!git clone -b guanhao --single-branch https://github.com/CS6101-Team/IGMC.git"
+      ],
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Cloning into 'IGMC'...\n",
+            "remote: Enumerating objects: 19, done.\u001b[K\n",
+            "remote: Counting objects: 100% (19/19), done.\u001b[K\n",
+            "remote: Compressing objects: 100% (16/16), done.\u001b[K\n",
+            "remote: Total 271 (delta 6), reused 13 (delta 3), pack-reused 252\u001b[K\n",
+            "Receiving objects: 100% (271/271), 19.65 MiB | 14.39 MiB/s, done.\n",
+            "Resolving deltas: 100% (141/141), done.\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "5WNmnPHfNPgL",
+        "outputId": "44e4ef7d-10e1-462c-a2f0-9810afb90d31"
+      },
+      "source": [
+        "# Change Directory\n",
+        "\n",
+        "%cd IGMC/"
+      ],
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "/content/IGMC\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "BUzqCj-8OCt7",
+        "outputId": "1fde30ea-c3ab-4ece-c7c7-15a2e650aac9"
+      },
+      "source": [
+        "# install packages\n",
+        "# torch 1.4.0\n",
+        "\n",
+        "!pip install torch==1.4.0 torchvision==0.5.0"
+      ],
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Collecting torch==1.4.0\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/24/19/4804aea17cd136f1705a5e98a00618cb8f6ccc375ad8bfa437408e09d058/torch-1.4.0-cp36-cp36m-manylinux1_x86_64.whl (753.4MB)\n",
+            "\u001b[K     |████████████████████████████████| 753.4MB 20kB/s \n",
+            "\u001b[?25hCollecting torchvision==0.5.0\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/7e/90/6141bf41f5655c78e24f40f710fdd4f8a8aff6c8b7c6f0328240f649bdbe/torchvision-0.5.0-cp36-cp36m-manylinux1_x86_64.whl (4.0MB)\n",
+            "\u001b[K     |████████████████████████████████| 4.0MB 53.9MB/s \n",
+            "\u001b[?25hRequirement already satisfied: numpy in /usr/local/lib/python3.6/dist-packages (from torchvision==0.5.0) (1.19.5)\n",
+            "Requirement already satisfied: pillow>=4.1.1 in /usr/local/lib/python3.6/dist-packages (from torchvision==0.5.0) (7.0.0)\n",
+            "Requirement already satisfied: six in /usr/local/lib/python3.6/dist-packages (from torchvision==0.5.0) (1.15.0)\n",
+            "Installing collected packages: torch, torchvision\n",
+            "  Found existing installation: torch 1.7.0+cu101\n",
+            "    Uninstalling torch-1.7.0+cu101:\n",
+            "      Successfully uninstalled torch-1.7.0+cu101\n",
+            "  Found existing installation: torchvision 0.8.1+cu101\n",
+            "    Uninstalling torchvision-0.8.1+cu101:\n",
+            "      Successfully uninstalled torchvision-0.8.1+cu101\n",
+            "Successfully installed torch-1.4.0 torchvision-0.5.0\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6OY2x7eQOMGN",
+        "outputId": "d52bf8b1-16ca-4adc-b457-93fb036f23b3"
+      },
+      "source": [
+        "# torch-geometric 1.4.2\n",
+        "\n",
+        "!pip install --no-index torch-scatter -f https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+        "!pip install --no-index torch-sparse -f https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+        "!pip install --no-index torch-cluster -f https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+        "!pip install --no-index torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+        "!pip install torch-geometric==1.4.2"
+      ],
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Looking in links: https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+            "Requirement already satisfied: torch-scatter in /usr/local/lib/python3.6/dist-packages (2.0.4)\n",
+            "Looking in links: https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+            "Requirement already satisfied: torch-sparse in /usr/local/lib/python3.6/dist-packages (0.6.1)\n",
+            "Requirement already satisfied: scipy in /usr/local/lib/python3.6/dist-packages (from torch-sparse) (1.4.1)\n",
+            "Requirement already satisfied: numpy>=1.13.3 in /usr/local/lib/python3.6/dist-packages (from scipy->torch-sparse) (1.19.5)\n",
+            "Looking in links: https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+            "Requirement already satisfied: torch-cluster in /usr/local/lib/python3.6/dist-packages (1.5.4)\n",
+            "Requirement already satisfied: scipy in /usr/local/lib/python3.6/dist-packages (from torch-cluster) (1.4.1)\n",
+            "Requirement already satisfied: numpy>=1.13.3 in /usr/local/lib/python3.6/dist-packages (from scipy->torch-cluster) (1.19.5)\n",
+            "Looking in links: https://pytorch-geometric.com/whl/torch-1.4.0+cu101.html\n",
+            "Requirement already satisfied: torch-spline-conv in /usr/local/lib/python3.6/dist-packages (1.2.0)\n",
+            "Collecting torch-geometric==1.4.2\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/13/b3/0516919a575a1a0a862bab1decfcfb5285ced09e9ffae6442af3b5981301/torch_geometric-1.4.2.tar.gz (139kB)\n",
+            "\u001b[K     |████████████████████████████████| 143kB 10.3MB/s \n",
+            "\u001b[?25hRequirement already satisfied: torch in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (1.4.0)\n",
+            "Requirement already satisfied: numpy in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (1.19.5)\n",
+            "Requirement already satisfied: scipy in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (1.4.1)\n",
+            "Requirement already satisfied: networkx in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (2.5)\n",
+            "Requirement already satisfied: scikit-learn in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (0.22.2.post1)\n",
+            "Requirement already satisfied: scikit-image in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (0.16.2)\n",
+            "Requirement already satisfied: numba in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (0.51.2)\n",
+            "Requirement already satisfied: requests in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (2.23.0)\n",
+            "Collecting plyfile\n",
+            "  Downloading https://files.pythonhosted.org/packages/03/6e/cb64d254c6d474a7cf636a7c7e318ab7c4ec8e4082cabaa2aab81f9b6a65/plyfile-0.7.3-py3-none-any.whl\n",
+            "Requirement already satisfied: pandas in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (1.1.5)\n",
+            "Requirement already satisfied: rdflib in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (5.0.0)\n",
+            "Requirement already satisfied: h5py in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (2.10.0)\n",
+            "Requirement already satisfied: googledrivedownloader in /usr/local/lib/python3.6/dist-packages (from torch-geometric==1.4.2) (0.4)\n",
+            "Requirement already satisfied: decorator>=4.3.0 in /usr/local/lib/python3.6/dist-packages (from networkx->torch-geometric==1.4.2) (4.4.2)\n",
+            "Requirement already satisfied: joblib>=0.11 in /usr/local/lib/python3.6/dist-packages (from scikit-learn->torch-geometric==1.4.2) (1.0.0)\n",
+            "Requirement already satisfied: imageio>=2.3.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image->torch-geometric==1.4.2) (2.4.1)\n",
+            "Requirement already satisfied: pillow>=4.3.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image->torch-geometric==1.4.2) (7.0.0)\n",
+            "Requirement already satisfied: PyWavelets>=0.4.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image->torch-geometric==1.4.2) (1.1.1)\n",
+            "Requirement already satisfied: matplotlib!=3.0.0,>=2.0.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image->torch-geometric==1.4.2) (3.2.2)\n",
+            "Requirement already satisfied: setuptools in /usr/local/lib/python3.6/dist-packages (from numba->torch-geometric==1.4.2) (53.0.0)\n",
+            "Requirement already satisfied: llvmlite<0.35,>=0.34.0.dev0 in /usr/local/lib/python3.6/dist-packages (from numba->torch-geometric==1.4.2) (0.34.0)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.6/dist-packages (from requests->torch-geometric==1.4.2) (2020.12.5)\n",
+            "Requirement already satisfied: chardet<4,>=3.0.2 in /usr/local/lib/python3.6/dist-packages (from requests->torch-geometric==1.4.2) (3.0.4)\n",
+            "Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /usr/local/lib/python3.6/dist-packages (from requests->torch-geometric==1.4.2) (1.24.3)\n",
+            "Requirement already satisfied: idna<3,>=2.5 in /usr/local/lib/python3.6/dist-packages (from requests->torch-geometric==1.4.2) (2.10)\n",
+            "Requirement already satisfied: pytz>=2017.2 in /usr/local/lib/python3.6/dist-packages (from pandas->torch-geometric==1.4.2) (2018.9)\n",
+            "Requirement already satisfied: python-dateutil>=2.7.3 in /usr/local/lib/python3.6/dist-packages (from pandas->torch-geometric==1.4.2) (2.8.1)\n",
+            "Requirement already satisfied: isodate in /usr/local/lib/python3.6/dist-packages (from rdflib->torch-geometric==1.4.2) (0.6.0)\n",
+            "Requirement already satisfied: pyparsing in /usr/local/lib/python3.6/dist-packages (from rdflib->torch-geometric==1.4.2) (2.4.7)\n",
+            "Requirement already satisfied: six in /usr/local/lib/python3.6/dist-packages (from rdflib->torch-geometric==1.4.2) (1.15.0)\n",
+            "Requirement already satisfied: kiwisolver>=1.0.1 in /usr/local/lib/python3.6/dist-packages (from matplotlib!=3.0.0,>=2.0.0->scikit-image->torch-geometric==1.4.2) (1.3.1)\n",
+            "Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.6/dist-packages (from matplotlib!=3.0.0,>=2.0.0->scikit-image->torch-geometric==1.4.2) (0.10.0)\n",
+            "Building wheels for collected packages: torch-geometric\n",
+            "  Building wheel for torch-geometric (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for torch-geometric: filename=torch_geometric-1.4.2-cp36-none-any.whl size=224447 sha256=6f88a7c12f37cb3fa7385ece72754dc794446416d6dddd6f2f6bf3365debc8e6\n",
+            "  Stored in directory: /root/.cache/pip/wheels/0f/9d/a3/2de0c1fb436ec76e2942b4216b820589d40bc48395995c3076\n",
+            "Successfully built torch-geometric\n",
+            "Installing collected packages: plyfile, torch-geometric\n",
+            "  Found existing installation: torch-geometric 1.6.3\n",
+            "    Uninstalling torch-geometric-1.6.3:\n",
+            "      Successfully uninstalled torch-geometric-1.6.3\n",
+            "Successfully installed plyfile-0.7.3 torch-geometric-1.4.2\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "H4IZtMy4ewbQ"
+      },
+      "source": [
+        "# Training with Flixster"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "MwGUluF0QUv3",
+        "outputId": "97081cd6-845b-4b68-9e82-b08fafe6c27a"
+      },
+      "source": [
+        "!python Main.py --data-name flixster --epochs 40 --testing --ensemble --save-interval 1"
+      ],
+      "execution_count": 28,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Namespace(ARR=0.001, adj_dropout=0.2, batch_size=50, continue_from=None, data_appendix='', data_name='flixster', data_seed=1234, debug=False, dynamic_test=False, dynamic_train=False, dynamic_val=False, ensemble=True, epochs=40, force_undirected=False, hop=1, keep_old=False, lr=0.001, lr_decay_factor=0.1, lr_decay_step_size=50, max_nodes_per_hop=10000, max_test_num=None, max_train_num=None, max_val_num=None, multiply_by=1, no_train=False, num_relations=5, ratio=1.0, reprocess=False, sample_ratio=1.0, save_appendix='', save_interval=1, seed=1, standard_rating=False, test_freq=1, testing=True, transfer='', use_features=False, visualize=False)\n",
+            "Command line input: python Main.py --data-name flixster --epochs 40 --testing --ensemble --save-interval 1\n",
+            " is saved.\n",
+            "number of users =  2341\n",
+            "number of item =  2956\n",
+            "User features shape: (3000, 3000)\n",
+            "Item features shape: (3000, 3000)\n",
+            "All ratings are:\n",
+            "[0.5 1.  1.5 2.  2.5 3.  3.5 4.  4.5 5. ]\n",
+            "#train: 23556, #val: 4712, #test: 2617\n",
+            "Used #train graphs: 23556, #test graphs: 2617\n",
+            "Total number of parameters is 49313\n",
+            "Epoch 1, train loss 1.437326, test rmse 0.903652:   0% 0/40 [00:09<?, ?it/s]Saving model states...\n",
+            "Epoch 2, train loss 1.012311, test rmse 0.884223:   2% 1/40 [00:19<06:22,  9.80s/it]Saving model states...\n",
+            "Epoch 3, train loss 0.983316, test rmse 0.884323:   5% 2/40 [00:28<06:07,  9.66s/it]Saving model states...\n",
+            "Epoch 4, train loss 0.963439, test rmse 0.879359:   8% 3/40 [00:37<05:53,  9.55s/it]Saving model states...\n",
+            "Epoch 5, train loss 0.951234, test rmse 0.874656:  10% 4/40 [00:46<05:38,  9.40s/it]Saving model states...\n",
+            "Epoch 6, train loss 0.938203, test rmse 0.875589:  12% 5/40 [00:55<05:28,  9.37s/it]Saving model states...\n",
+            "Epoch 7, train loss 0.920861, test rmse 0.875170:  15% 6/40 [01:05<05:15,  9.29s/it]Saving model states...\n",
+            "Epoch 8, train loss 0.904566, test rmse 0.879952:  18% 7/40 [01:14<05:05,  9.27s/it]Saving model states...\n",
+            "Epoch 9, train loss 0.889398, test rmse 0.890295:  20% 8/40 [01:23<04:56,  9.27s/it]Saving model states...\n",
+            "Epoch 10, train loss 0.891748, test rmse 0.886685:  22% 9/40 [01:32<04:46,  9.23s/it]Saving model states...\n",
+            "Epoch 11, train loss 0.874254, test rmse 0.881670:  25% 10/40 [01:42<04:38,  9.27s/it]Saving model states...\n",
+            "Epoch 12, train loss 0.861319, test rmse 0.901638:  28% 11/40 [01:51<04:28,  9.27s/it]Saving model states...\n",
+            "Epoch 13, train loss 0.864911, test rmse 0.872243:  30% 12/40 [02:00<04:19,  9.28s/it]Saving model states...\n",
+            "Epoch 14, train loss 0.842019, test rmse 0.884695:  32% 13/40 [02:09<04:10,  9.27s/it]Saving model states...\n",
+            "Epoch 15, train loss 0.834143, test rmse 0.872671:  35% 14/40 [02:19<04:00,  9.26s/it]Saving model states...\n",
+            "Epoch 16, train loss 0.813702, test rmse 0.879335:  38% 15/40 [02:28<03:51,  9.25s/it]Saving model states...\n",
+            "Epoch 17, train loss 0.817644, test rmse 0.871452:  40% 16/40 [02:37<03:41,  9.23s/it]Saving model states...\n",
+            "Epoch 18, train loss 0.811370, test rmse 0.886001:  42% 17/40 [02:47<03:32,  9.26s/it]Saving model states...\n",
+            "Epoch 19, train loss 0.800755, test rmse 0.887233:  45% 18/40 [02:56<03:24,  9.30s/it]Saving model states...\n",
+            "Epoch 20, train loss 0.801445, test rmse 0.871251:  48% 19/40 [03:05<03:14,  9.28s/it]Saving model states...\n",
+            "Epoch 21, train loss 0.791534, test rmse 0.877020:  50% 20/40 [03:14<03:05,  9.28s/it]Saving model states...\n",
+            "Epoch 22, train loss 0.789190, test rmse 0.874563:  52% 21/40 [03:23<02:55,  9.22s/it]Saving model states...\n",
+            "Epoch 23, train loss 0.787358, test rmse 0.880943:  55% 22/40 [03:33<02:46,  9.24s/it]Saving model states...\n",
+            "Epoch 24, train loss 0.782519, test rmse 0.878303:  57% 23/40 [03:42<02:36,  9.22s/it]Saving model states...\n",
+            "Epoch 25, train loss 0.786163, test rmse 0.875149:  60% 24/40 [03:51<02:27,  9.20s/it]Saving model states...\n",
+            "Epoch 26, train loss 0.777608, test rmse 0.874734:  62% 25/40 [04:00<02:19,  9.27s/it]Saving model states...\n",
+            "Epoch 27, train loss 0.770308, test rmse 0.874684:  65% 26/40 [04:10<02:09,  9.27s/it]Saving model states...\n",
+            "Epoch 28, train loss 0.768225, test rmse 0.873163:  68% 27/40 [04:19<02:00,  9.27s/it]Saving model states...\n",
+            "Epoch 29, train loss 0.766081, test rmse 0.880011:  70% 28/40 [04:28<01:51,  9.30s/it]Saving model states...\n",
+            "Epoch 30, train loss 0.766773, test rmse 0.877198:  72% 29/40 [04:37<01:41,  9.27s/it]Saving model states...\n",
+            "Epoch 31, train loss 0.762170, test rmse 0.873813:  75% 30/40 [04:47<01:32,  9.23s/it]Saving model states...\n",
+            "Epoch 32, train loss 0.759475, test rmse 0.879922:  78% 31/40 [04:56<01:23,  9.25s/it]Saving model states...\n",
+            "Epoch 33, train loss 0.757592, test rmse 0.875401:  80% 32/40 [05:06<01:14,  9.27s/it]Saving model states...\n",
+            "Epoch 34, train loss 0.761228, test rmse 0.873539:  82% 33/40 [05:15<01:05,  9.34s/it]Saving model states...\n",
+            "Epoch 35, train loss 0.760073, test rmse 0.872251:  85% 34/40 [05:24<00:55,  9.32s/it]Saving model states...\n",
+            "Epoch 36, train loss 0.754086, test rmse 0.873922:  88% 35/40 [05:33<00:46,  9.33s/it]Saving model states...\n",
+            "Epoch 37, train loss 0.757780, test rmse 0.883770:  90% 36/40 [05:43<00:37,  9.30s/it]Saving model states...\n",
+            "Epoch 38, train loss 0.754713, test rmse 0.878495:  92% 37/40 [05:52<00:27,  9.25s/it]Saving model states...\n",
+            "Epoch 39, train loss 0.754498, test rmse 0.876515:  95% 38/40 [06:01<00:18,  9.30s/it]Saving model states...\n",
+            "Epoch 40, train loss 0.752595, test rmse 0.874671:  98% 39/40 [06:10<00:09,  9.29s/it]Saving model states...\n",
+            "Epoch 40, train loss 0.752595, test rmse 0.874671: 100% 40/40 [06:10<00:00,  9.27s/it]\n",
+            "Final Test RMSE: 0.874671, Duration: 370.898895\n",
+            "Testing begins...\n",
+            "100% 53/53 [00:00<00:00, 125.00it/s]\n",
+            "Testing begins...\n",
+            "100% 53/53 [00:00<00:00, 121.84it/s]\n",
+            "Testing begins...\n",
+            "100% 53/53 [00:00<00:00, 120.84it/s]\n",
+            "Testing begins...\n",
+            "100% 53/53 [00:00<00:00, 119.10it/s]\n",
+            "Test Once RMSE: 0.874646, Duration: 1.749504\n",
+            "Ensemble test rmse is: 0.874646\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "FGyFC8mbnxRf"
+      },
+      "source": [
+        "40 epochs work but not like 1 epoch for e.g. (see movielens)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "UFuxsYOvff86"
+      },
+      "source": [
+        "# Training with MovieLens100K"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "eRdASd0DfcdO",
+        "outputId": "644249c5-882f-4c31-d4cf-597cdc95ce2f"
+      },
+      "source": [
+        "!python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 1 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train --batch-size 25 --save-interval 1"
+      ],
+      "execution_count": 35,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Namespace(ARR=0.001, adj_dropout=0.2, batch_size=25, continue_from=None, data_appendix='_mnph200', data_name='ml_100k', data_seed=1234, debug=False, dynamic_test=False, dynamic_train=True, dynamic_val=False, ensemble=True, epochs=1, force_undirected=False, hop=1, keep_old=False, lr=0.001, lr_decay_factor=0.1, lr_decay_step_size=50, max_nodes_per_hop='200', max_test_num=None, max_train_num=None, max_val_num=None, multiply_by=1, no_train=False, num_relations=5, ratio=1.0, reprocess=False, sample_ratio=1.0, save_appendix='_mnph200', save_interval=1, seed=1, standard_rating=False, test_freq=1, testing=True, transfer='', use_features=False, visualize=False)\n",
+            "Command line input: python Main.py --data-name ml_100k --save-appendix _mnph200 --data-appendix _mnph200 --epochs 1 --max-nodes-per-hop 200 --testing --ensemble --dynamic-train --batch-size 25 --save-interval 1\n",
+            " is saved.\n",
+            "Using official MovieLens split u1.base/u1.test with 20% validation...\n",
+            "User features shape: (943, 23)\n",
+            "Item features shape: (1682, 18)\n",
+            "All ratings are:\n",
+            "[1. 2. 3. 4. 5.]\n",
+            "#train: 80000, #val: 16000, #test: 20000\n",
+            "tcmalloc: large alloc 2070216704 bytes == 0xd786000 @  0x7f6a41cdfb6b 0x7f6a41cff379 0x7f69e4d70b4a 0x7f69e4d725fa 0x7f69e7476c44 0x7f6a2ff49580 0x551555 0x5a9dac 0x50a433 0x50beb4 0x507be4 0x508ec2 0x5a4c61 0x5a4fb8 0x4e012e 0x50a461 0x50beb4 0x507be4 0x588e5c 0x59fd0e 0x50d256 0x507be4 0x509900 0x50a2fd 0x50beb4 0x507be4 0x508ec2 0x594a01 0x549e8f 0x5515c1 0x5a9dac\n",
+            "Used #train graphs: 80000, #test graphs: 20000\n",
+            "Total number of parameters is 49233\n",
+            "Epoch 1, train loss 1.165963, test rmse 0.953843:   0% 0/1 [06:40<?, ?it/s]Saving model states...\n",
+            "Epoch 1, train loss 1.165963, test rmse 0.953843: 100% 1/1 [06:40<00:00, 400.18s/it]\n",
+            "Final Test RMSE: 0.953843, Duration: 400.176995\n",
+            "Testing begins...\n",
+            "  0% 0/800 [00:00<?, ?it/s]Traceback (most recent call last):\n",
+            "  File \"Main.py\", line 464, in <module>\n",
+            "    checkpoints=checkpoints\n",
+            "  File \"/content/IGMC/train_eval.py\", line 125, in test_once\n",
+            "    rmse = eval_rmse_ensemble(model, checkpoints, test_loader, device, show_progress=True)\n",
+            "  File \"/content/IGMC/train_eval.py\", line 243, in eval_rmse_ensemble\n",
+            "    mse_loss = eval_loss_ensemble(model, checkpoints, loader, device, True, show_progress)\n",
+            "  File \"/content/IGMC/train_eval.py\", line 217, in eval_loss_ensemble\n",
+            "    model.load_state_dict(torch.load(checkpoint))\n",
+            "  File \"/usr/local/lib/python3.6/dist-packages/torch/serialization.py\", line 525, in load\n",
+            "    with _open_file_like(f, 'rb') as opened_file:\n",
+            "  File \"/usr/local/lib/python3.6/dist-packages/torch/serialization.py\", line 212, in _open_file_like\n",
+            "    return _open_file(name_or_buffer, mode)\n",
+            "  File \"/usr/local/lib/python3.6/dist-packages/torch/serialization.py\", line 193, in __init__\n",
+            "    super(_open_file, self).__init__(open(name, mode))\n",
+            "FileNotFoundError: [Errno 2] No such file or directory: '/content/IGMC/results/ml_100k_mnph200_testmode/model_checkpoint-29.pth'\n",
+            "  0% 0/800 [00:00<?, ?it/s]\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "YC3q9VTle8ks"
+      },
+      "source": [
+        "# Transfer Learning"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "MxFTC4-bfEu3"
+      },
+      "source": [
+        "flixter to douban"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "AUhxpxGWQg6A",
+        "outputId": "fabe6e0f-aa1d-45f3-bccd-b8269b466dbc"
+      },
+      "source": [
+        "# with original code\n",
+        "# supposedly transfer with movielens model but model not available to train\n",
+        "\n",
+        "!./run_transfer_exps.sh flixster"
+      ],
+      "execution_count": 43,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "usage: Main.py [-h] [--testing] [--no-train] [--debug] [--data-name DATA_NAME]\n",
+            "               [--data-appendix DATA_APPENDIX] [--save-appendix SAVE_APPENDIX]\n",
+            "               [--max-train-num MAX_TRAIN_NUM] [--max-val-num MAX_VAL_NUM]\n",
+            "               [--max-test-num MAX_TEST_NUM] [--seed S] [--data-seed S]\n",
+            "               [--reprocess] [--dynamic-train] [--dynamic-test]\n",
+            "               [--dynamic-val] [--keep-old] [--save-interval SAVE_INTERVAL]\n",
+            "               [--hop S] [--sample-ratio SAMPLE_RATIO]\n",
+            "               [--max-nodes-per-hop MAX_NODES_PER_HOP] [--use-features]\n",
+            "               [--adj-dropout ADJ_DROPOUT] [--force-undirected]\n",
+            "               [--continue-from CONTINUE_FROM] [--lr LR]\n",
+            "               [--lr-decay-step-size LR_DECAY_STEP_SIZE]\n",
+            "               [--lr-decay-factor LR_DECAY_FACTOR] [--epochs N]\n",
+            "               [--batch-size N] [--test-freq N] [--ARR ARR]\n",
+            "               [--transfer TRANSFER] [--num-relations NUM_RELATIONS]\n",
+            "               [--multiply-by MULTIPLY_BY] [--visualize] [--ensemble]\n",
+            "               [--standard-rating] [--ratio RATIO]\n",
+            "Main.py: error: unrecognized arguments: --dynamic-dataset\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "u0ZueS6Lpl6j",
+        "outputId": "e147e9a7-d317-4b39-dd1c-08e4848038f9"
+      },
+      "source": [
+        "# Edited (replace sh file)\n",
+        "# Try with flixster model\n",
+        "# replace dynamic dataset with dynamic test (apparently not used anywhere in Main.py)\n",
+        "\n",
+        "!./run_transfer_exps.sh douban"
+      ],
+      "execution_count": 45,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Namespace(ARR=0.001, adj_dropout=0.2, batch_size=50, continue_from=None, data_appendix='', data_name='douban', data_seed=1234, debug=False, dynamic_test=True, dynamic_train=False, dynamic_val=False, ensemble=True, epochs=40, force_undirected=False, hop=1, keep_old=False, lr=0.001, lr_decay_factor=0.1, lr_decay_step_size=50, max_nodes_per_hop=10000, max_test_num=None, max_train_num=None, max_val_num=None, multiply_by=1, no_train=True, num_relations=5, ratio=1.0, reprocess=False, sample_ratio=1.0, save_appendix='', save_interval=10, seed=1, standard_rating=False, test_freq=1, testing=True, transfer='results/flixster_testmode/', use_features=False, visualize=False)\n",
+            "Command line input: python Main.py --data-name douban --epochs 40 --testing --no-train --ensemble --transfer results/flixster_testmode/ --dynamic-test --num-relations 5 --multiply-by 1\n",
+            " is saved.\n",
+            "number of users =  2999\n",
+            "number of item =  3000\n",
+            "User features shape: (3000, 3000)\n",
+            "Item features shape: (3000, 3000)\n",
+            "All ratings are:\n",
+            "[1. 2. 3. 4. 5.]\n",
+            "#train: 123202, #val: 24641, #test: 13689\n",
+            "Processing...\n",
+            "Enclosing subgraph extraction begins...\n",
+            " 88% 7/8 [01:18<00:11, 11.18s/it]\n",
+            "Time elapsed for subgraph extraction: 78.60871624946594s\n",
+            "Transforming to pytorch_geometric graphs...\n",
+            "100% 123202/123202 [00:10<00:00, 11590.51it/s]\n",
+            "Time elapsed for transforming to pytorch_geometric graphs: 10.630005598068237s\n",
+            "Done!\n",
+            "Used #train graphs: 123202, #test graphs: 13689\n",
+            "Total number of parameters is 49233\n",
+            "Testing begins...\n",
+            "  0% 0/274 [00:00<?, ?it/s]Traceback (most recent call last):\n",
+            "  File \"Main.py\", line 464, in <module>\n",
+            "    checkpoints=checkpoints\n",
+            "  File \"/content/IGMC/train_eval.py\", line 125, in test_once\n",
+            "    rmse = eval_rmse_ensemble(model, checkpoints, test_loader, device, show_progress=True)\n",
+            "  File \"/content/IGMC/train_eval.py\", line 243, in eval_rmse_ensemble\n",
+            "    mse_loss = eval_loss_ensemble(model, checkpoints, loader, device, True, show_progress)\n",
+            "  File \"/content/IGMC/train_eval.py\", line 217, in eval_loss_ensemble\n",
+            "    model.load_state_dict(torch.load(checkpoint))\n",
+            "  File \"/usr/local/lib/python3.6/dist-packages/torch/nn/modules/module.py\", line 830, in load_state_dict\n",
+            "    self.__class__.__name__, \"\\n\\t\".join(error_msgs)))\n",
+            "RuntimeError: Error(s) in loading state_dict for IGMC:\n",
+            "\tsize mismatch for convs.0.att: copying a param with shape torch.Size([10, 4]) from checkpoint, the shape in current model is torch.Size([5, 4]).\n",
+            "\tsize mismatch for convs.1.att: copying a param with shape torch.Size([10, 4]) from checkpoint, the shape in current model is torch.Size([5, 4]).\n",
+            "\tsize mismatch for convs.2.att: copying a param with shape torch.Size([10, 4]) from checkpoint, the shape in current model is torch.Size([5, 4]).\n",
+            "\tsize mismatch for convs.3.att: copying a param with shape torch.Size([10, 4]) from checkpoint, the shape in current model is torch.Size([5, 4]).\n",
+            "  0% 0/274 [00:00<?, ?it/s]\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "9ITAM7xnre9W",
+        "outputId": "49c17472-d666-475c-aac5-1349ad92dbfe"
+      },
+      "source": [
+        "# How to determine num-relations and multiply-by parameters\n",
+        "!python Main.py --data-name ${data} --epochs 40 --testing --no-train --ensemble --transfer results/flixster_testmode/ --dynamic-test --num-relations ${num_relations} --multiply-by ${multiply_by}"
+      ],
+      "execution_count": 46,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "usage: Main.py [-h] [--testing] [--no-train] [--debug] [--data-name DATA_NAME]\n",
+            "               [--data-appendix DATA_APPENDIX] [--save-appendix SAVE_APPENDIX]\n",
+            "               [--max-train-num MAX_TRAIN_NUM] [--max-val-num MAX_VAL_NUM]\n",
+            "               [--max-test-num MAX_TEST_NUM] [--seed S] [--data-seed S]\n",
+            "               [--reprocess] [--dynamic-train] [--dynamic-test]\n",
+            "               [--dynamic-val] [--keep-old] [--save-interval SAVE_INTERVAL]\n",
+            "               [--hop S] [--sample-ratio SAMPLE_RATIO]\n",
+            "               [--max-nodes-per-hop MAX_NODES_PER_HOP] [--use-features]\n",
+            "               [--adj-dropout ADJ_DROPOUT] [--force-undirected]\n",
+            "               [--continue-from CONTINUE_FROM] [--lr LR]\n",
+            "               [--lr-decay-step-size LR_DECAY_STEP_SIZE]\n",
+            "               [--lr-decay-factor LR_DECAY_FACTOR] [--epochs N]\n",
+            "               [--batch-size N] [--test-freq N] [--ARR ARR]\n",
+            "               [--transfer TRANSFER] [--num-relations NUM_RELATIONS]\n",
+            "               [--multiply-by MULTIPLY_BY] [--visualize] [--ensemble]\n",
+            "               [--standard-rating] [--ratio RATIO]\n",
+            "Main.py: error: argument --data-name: expected one argument\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "auDVDT7puElE"
+      },
+      "source": [
+        "# Sparsity experiment skipped because there's no trained movielens model at the moment."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "KMMAE5UwucUf"
+      },
+      "source": [
+        "# Visualization"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "sGYz9kw8uYXz",
+        "outputId": "e22bdee8-2a28-4941-8624-963abccd5d9c"
+      },
+      "source": [
+        "!python Main.py --data-name flixster --epochs 40 --testing --no-train --visualize"
+      ],
+      "execution_count": 48,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Namespace(ARR=0.001, adj_dropout=0.2, batch_size=50, continue_from=None, data_appendix='', data_name='flixster', data_seed=1234, debug=False, dynamic_test=False, dynamic_train=False, dynamic_val=False, ensemble=False, epochs=40, force_undirected=False, hop=1, keep_old=False, lr=0.001, lr_decay_factor=0.1, lr_decay_step_size=50, max_nodes_per_hop=10000, max_test_num=None, max_train_num=None, max_val_num=None, multiply_by=1, no_train=True, num_relations=5, ratio=1.0, reprocess=False, sample_ratio=1.0, save_appendix='', save_interval=10, seed=1, standard_rating=False, test_freq=1, testing=True, transfer='', use_features=False, visualize=True)\n",
+            "Command line input: python Main.py --data-name flixster --epochs 40 --testing --no-train --visualize\n",
+            " is saved.\n",
+            "number of users =  2341\n",
+            "number of item =  2956\n",
+            "User features shape: (3000, 3000)\n",
+            "Item features shape: (3000, 3000)\n",
+            "All ratings are:\n",
+            "[0.5 1.  1.5 2.  2.5 3.  3.5 4.  4.5 5. ]\n",
+            "#train: 23556, #val: 4712, #test: 2617\n",
+            "Used #train graphs: 23556, #test graphs: 2617\n",
+            "Total number of parameters is 49313\n",
+            "100% 53/53 [00:00<00:00, 103.56it/s]\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "TGyBc5sJABS4"
+      },
+      "source": [
+        "# Download Zip file"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "rf0tTamSv4kl",
+        "outputId": "453509ee-4e98-46da-9be7-65947d59d990"
+      },
+      "source": [
+        "|!zip -r /content/IGMC.zip /content/IGMC"
+      ],
+      "execution_count": 49,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "  adding: content/IGMC/ (stored 0%)\n",
+            "  adding: content/IGMC/README.md (deflated 60%)\n",
+            "  adding: content/IGMC/util_functions.py (deflated 75%)\n",
+            "  adding: content/IGMC/.git/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/branches/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/packed-refs (deflated 9%)\n",
+            "  adding: content/IGMC/.git/objects/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/objects/info/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/objects/pack/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/objects/pack/pack-7541d90f7648c8dfef6ae7237f467410b0f55066.idx (deflated 8%)\n",
+            "  adding: content/IGMC/.git/objects/pack/pack-7541d90f7648c8dfef6ae7237f467410b0f55066.pack (deflated 4%)\n",
+            "  adding: content/IGMC/.git/config (deflated 33%)\n",
+            "  adding: content/IGMC/.git/logs/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/logs/HEAD (deflated 26%)\n",
+            "  adding: content/IGMC/.git/logs/refs/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/logs/refs/heads/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/logs/refs/heads/guanhao (deflated 26%)\n",
+            "  adding: content/IGMC/.git/HEAD (stored 0%)\n",
+            "  adding: content/IGMC/.git/description (deflated 14%)\n",
+            "  adding: content/IGMC/.git/info/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/info/exclude (deflated 28%)\n",
+            "  adding: content/IGMC/.git/refs/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/refs/tags/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/refs/heads/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/refs/heads/guanhao (stored 0%)\n",
+            "  adding: content/IGMC/.git/index (deflated 40%)\n",
+            "  adding: content/IGMC/.git/hooks/ (stored 0%)\n",
+            "  adding: content/IGMC/.git/hooks/pre-rebase.sample (deflated 59%)\n",
+            "  adding: content/IGMC/.git/hooks/pre-applypatch.sample (deflated 38%)\n",
+            "  adding: content/IGMC/.git/hooks/prepare-commit-msg.sample (deflated 50%)\n",
+            "  adding: content/IGMC/.git/hooks/update.sample (deflated 68%)\n",
+            "  adding: content/IGMC/.git/hooks/post-update.sample (deflated 27%)\n",
+            "  adding: content/IGMC/.git/hooks/applypatch-msg.sample (deflated 42%)\n",
+            "  adding: content/IGMC/.git/hooks/pre-receive.sample (deflated 40%)\n",
+            "  adding: content/IGMC/.git/hooks/fsmonitor-watchman.sample (deflated 53%)\n",
+            "  adding: content/IGMC/.git/hooks/pre-commit.sample (deflated 43%)\n",
+            "  adding: content/IGMC/.git/hooks/pre-push.sample (deflated 50%)\n",
+            "  adding: content/IGMC/.git/hooks/commit-msg.sample (deflated 44%)\n",
+            "  adding: content/IGMC/LICENSE (deflated 41%)\n",
+            "  adding: content/IGMC/.gitignore (deflated 8%)\n",
+            "  adding: content/IGMC/Main.py (deflated 74%)\n",
+            "  adding: content/IGMC/__pycache__/ (stored 0%)\n",
+            "  adding: content/IGMC/__pycache__/data_utils.cpython-36.pyc (deflated 51%)\n",
+            "  adding: content/IGMC/__pycache__/preprocessing.cpython-36.pyc (deflated 53%)\n",
+            "  adding: content/IGMC/__pycache__/models.cpython-36.pyc (deflated 56%)\n",
+            "  adding: content/IGMC/__pycache__/util_functions.cpython-36.pyc (deflated 52%)\n",
+            "  adding: content/IGMC/__pycache__/train_eval.cpython-36.pyc (deflated 48%)\n",
+            "  adding: content/IGMC/preprocessing.py (deflated 78%)\n",
+            "  adding: content/IGMC/testing.ipynb (deflated 80%)\n",
+            "  adding: content/IGMC/requirements.txt (deflated 58%)\n",
+            "  adding: content/IGMC/raw_data/ (stored 0%)\n",
+            "  adding: content/IGMC/raw_data/flixster/ (stored 0%)\n",
+            "  adding: content/IGMC/raw_data/flixster/training_test_dataset.mat (deflated 52%)\n",
+            "  adding: content/IGMC/raw_data/.gitignore (stored 0%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/ (stored 0%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/ua.test (deflated 65%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u.data (deflated 58%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u.user (deflated 65%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u4.test (deflated 67%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u1.test (deflated 69%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u.genre (deflated 19%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u.item (deflated 80%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/ub.test (deflated 65%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u3.test (deflated 67%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u2.base (deflated 71%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/README (deflated 60%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u5.base (deflated 71%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/allbut.pl (deflated 50%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u1.base (deflated 72%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u.info (deflated 6%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u5.test (deflated 67%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/ub.base (deflated 72%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/mku.sh (deflated 63%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u.occupation (deflated 36%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u4.base (deflated 71%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u3.base (deflated 71%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/ua.base (deflated 72%)\n",
+            "  adding: content/IGMC/raw_data/ml_100k/u2.test (deflated 68%)\n",
+            "  adding: content/IGMC/raw_data/yahoo_music/ (stored 0%)\n",
+            "  adding: content/IGMC/raw_data/yahoo_music/training_test_dataset.mat (deflated 77%)\n",
+            "  adding: content/IGMC/raw_data/douban/ (stored 0%)\n",
+            "  adding: content/IGMC/raw_data/douban/training_test_dataset.mat (deflated 33%)\n",
+            "  adding: content/IGMC/models.py (deflated 82%)\n",
+            "  adding: content/IGMC/run_fdy.sh (deflated 32%)\n",
+            "  adding: content/IGMC/train_eval.py (deflated 73%)\n",
+            "  adding: content/IGMC/data/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/train/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/train/processed/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/train/processed/pre_transform.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/train/processed/pre_filter.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/train/processed/data.pt (deflated 96%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/test/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/test/processed/ (stored 0%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/test/processed/pre_transform.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/test/processed/pre_filter.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/flixster/testmode/test/processed/data.pt (deflated 96%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/ (stored 0%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/testmode/ (stored 0%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/testmode/test/ (stored 0%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/testmode/test/processed/ (stored 0%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/testmode/test/processed/pre_transform.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/testmode/test/processed/pre_filter.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/ml_100k_mnph200/testmode/test/processed/data.pt (deflated 94%)\n",
+            "  adding: content/IGMC/data/douban/ (stored 0%)\n",
+            "  adding: content/IGMC/data/douban/testmode/ (stored 0%)\n",
+            "  adding: content/IGMC/data/douban/testmode/train/ (stored 0%)\n",
+            "  adding: content/IGMC/data/douban/testmode/train/processed/ (stored 0%)\n",
+            "  adding: content/IGMC/data/douban/testmode/train/processed/pre_transform.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/douban/testmode/train/processed/pre_filter.pt (deflated 8%)\n",
+            "  adding: content/IGMC/data/douban/testmode/train/processed/data.pt (deflated 95%)\n",
+            "  adding: content/IGMC/data_utils.py (deflated 75%)\n",
+            "  adding: content/IGMC/overall2.svg (deflated 90%)\n",
+            "  adding: content/IGMC/run_transfer_exps.sh (deflated 56%)\n",
+            "  adding: content/IGMC/results/ (stored 0%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/ (stored 0%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint35.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint9.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint23.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint1.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint33.pth (deflated 11%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint3.pth (deflated 16%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint29.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint37.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint15.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/util_functions.py (deflated 75%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint12.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint32.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint26.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint3.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint8.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint1.pth (deflated 6%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint2.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint21.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint5.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint6.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint13.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint30.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint19.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint14.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint29.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/Main.py (deflated 74%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint19.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint21.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint22.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint7.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint17.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint10.pth (deflated 16%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint35.pth (deflated 10%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/log.txt (deflated 85%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint24.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint18.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint30.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint34.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint23.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint28.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint11.pth (deflated 16%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/models.py (deflated 82%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint38.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint22.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint25.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint39.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint26.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint27.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/cmd_input.txt (deflated 83%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint28.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint2.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint4.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint31.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint37.pth (deflated 11%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/train_eval.py (deflated 73%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint40.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint24.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint4.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint40.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint32.pth (deflated 12%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint31.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint10.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint12.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint27.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint20.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/visualization_flixster_prediction.pdf (deflated 31%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint14.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint36.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint6.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint9.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint20.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint5.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint18.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint7.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint25.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint8.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint11.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint39.pth (deflated 13%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint33.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint13.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint16.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint38.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint36.pth (deflated 11%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/.ipynb_checkpoints/ (stored 0%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint15.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/model_checkpoint34.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint17.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/flixster_testmode/optimizer_checkpoint16.pth (deflated 14%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/ (stored 0%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/model_checkpoint1.pth (deflated 8%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/util_functions.py (deflated 75%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/optimizer_checkpoint1.pth (deflated 15%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/Main.py (deflated 74%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/log.txt (deflated 57%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/models.py (deflated 82%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/cmd_input.txt (deflated 82%)\n",
+            "  adding: content/IGMC/results/ml_100k_mnph200_testmode/train_eval.py (deflated 73%)\n",
+            "  adding: content/IGMC/results/douban_testmode/ (stored 0%)\n",
+            "  adding: content/IGMC/results/douban_testmode/cmd_input.txt (deflated 24%)\n",
+            "  adding: content/IGMC/summarize_fdy.py (deflated 53%)\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "mK9jLJKXv8LX"
+      },
+      "source": [
+        "# from google.colab import files\n",
+        "# files.download(\"/content/IGMC.zip\")"
+      ],
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "ybN88GDNwAY1"
+      },
+      "source": [
+        ""
+      ],
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}

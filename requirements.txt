@@ -1,0 +1,63 @@
+appnope @ file:///opt/concourse/worker/volumes/live/5f13e5b3-5355-4541-5fc3-f08850c73cf9/volume/appnope_1606859448618/work
+backcall @ file:///home/ktietz/src/ci/backcall_1611930011877/work
+certifi==2020.12.5
+chardet==4.0.0
+cycler==0.10.0
+decorator @ file:///home/ktietz/src/ci/decorator_1611930055503/work
+googledrivedownloader==0.4
+h5py==3.1.0
+idna==2.10
+imageio==2.9.0
+ipykernel @ file:///opt/concourse/worker/volumes/live/88f541d3-5a27-498f-7391-f2e50ca36560/volume/ipykernel_1596206680118/work/dist/ipykernel-5.3.4-py3-none-any.whl
+ipython @ file:///opt/concourse/worker/volumes/live/449dee2b-18f2-43ab-7642-175cc393858f/volume/ipython_1612212910853/work
+ipython-genutils @ file:///tmp/build/80754af9/ipython_genutils_1606773439826/work
+isodate==0.6.0
+jedi==0.17.0
+joblib==1.0.0
+jupyter-client @ file:///tmp/build/80754af9/jupyter_client_1601311786391/work
+jupyter-core @ file:///opt/concourse/worker/volumes/live/c8df8dce-dbb3-46e7-649c-adf4ed2dd00a/volume/jupyter_core_1612213293829/work
+kiwisolver==1.3.1
+llvmlite==0.35.0
+matplotlib==3.3.4
+mkl-fft==1.2.0
+mkl-random==1.1.1
+mkl-service==2.3.0
+networkx==2.5
+numba==0.52.0
+numpy @ file:///opt/concourse/worker/volumes/live/5572694e-967a-4c0c-52cf-b53d43e72de9/volume/numpy_and_numpy_base_1603491881791/work
+olefile==0.46
+pandas==1.2.1
+parso @ file:///tmp/build/80754af9/parso_1607623074025/work
+pexpect @ file:///tmp/build/80754af9/pexpect_1605563209008/work
+pickleshare @ file:///tmp/build/80754af9/pickleshare_1606932040724/work
+Pillow @ file:///opt/concourse/worker/volumes/live/705be880-f90c-4fb3-489d-9ee685c52cbe/volume/pillow_1609786792428/work
+plyfile==0.7.3
+prompt-toolkit @ file:///tmp/build/80754af9/prompt-toolkit_1602688806899/work
+ptyprocess @ file:///tmp/build/80754af9/ptyprocess_1609355006118/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
+Pygments @ file:///tmp/build/80754af9/pygments_1610565767015/work
+pyparsing==2.4.7
+python-dateutil @ file:///home/ktietz/src/ci/python-dateutil_1611928101742/work
+pytz==2021.1
+PyWavelets==1.1.1
+pyzmq==20.0.0
+rdflib==5.0.0
+requests==2.25.1
+scikit-image==0.18.1
+scikit-learn==0.24.1
+scipy==1.6.0
+six @ file:///opt/concourse/worker/volumes/live/5b31cb27-1e37-4ca5-6e9f-86246eb206d2/volume/six_1605205320872/work
+threadpoolctl==2.1.0
+tifffile==2021.2.1
+torch==1.4.0
+torch-cluster==1.5.4
+torch-geometric==1.4.2
+torch-scatter==2.0.4
+torch-sparse==0.6.1
+torch-spline-conv==1.2.0
+torchvision==0.5.0
+tornado @ file:///opt/concourse/worker/volumes/live/05341796-4198-4ded-4a9a-332fde3cdfd1/volume/tornado_1606942323372/work
+tqdm==4.56.0
+traitlets @ file:///home/ktietz/src/ci/traitlets_1611929699868/work
+typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1611751222202/work
+urllib3==1.26.3
+wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
