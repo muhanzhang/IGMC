@@ -17,6 +17,7 @@ from models import *
 import traceback
 import warnings
 import sys
+import csv
 
 # used to traceback which code cause warnings, can delete
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
@@ -28,11 +29,18 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 warnings.showwarning = warn_with_traceback
 
 
-def logger(info, model, optimizer):
+def logger(info, model, optimizer, timetaken=0):
     epoch, train_loss, test_rmse = info['epoch'], info['train_loss'], info['test_rmse']
-    with open(os.path.join(args.res_dir, 'log.txt'), 'a') as f:
-        f.write('Epoch {}, train loss {:.4f}, test rmse {:.6f}\n'.format(
-            epoch, train_loss, test_rmse))
+    filename= os.path.join(args.res_dir, 'log.csv')
+    file_exists = os.path.isfile(filename)
+    with open(filename, 'a') as f:
+        headers = ['Epoch', 'Train', "Test", "Time"]
+        writer = csv.DictWriter(f, delimiter=',', lineterminator='\n',fieldnames=headers)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow({'Epoch': epoch, 'Train': train_loss, "Test": test_rmse, "Time": timetaken})
+        # f.write('Epoch {}, train loss {:.4f}, test rmse {:.6f}\n'.format(
+        #     epoch, train_loss, test_rmse))
     if type(epoch) == int and epoch % args.save_interval == 0:
         print('Saving model states...')
         model_name = os.path.join(args.res_dir, 'model_checkpoint{}.pth'.format(epoch))

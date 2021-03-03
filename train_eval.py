@@ -73,6 +73,7 @@ def train_multiple_epochs(train_dataset,
     else:
         pbar = range(start_epoch, epochs + start_epoch)
     for epoch in pbar:
+        e_start = time.perf_counter()
         train_loss = train(model, optimizer, train_loader, device, regression=True, ARR=ARR, 
                            show_progress=batch_pbar, epoch=epoch)
         if epoch % test_freq == 0:
@@ -96,7 +97,7 @@ def train_multiple_epochs(train_dataset,
                 param_group['lr'] = lr_decay_factor * param_group['lr']
 
         if logger is not None:
-            logger(eval_info, model, optimizer)
+            logger(eval_info, model, optimizer, timetaken=time.perf_counter() - e_start)
 
     if torch.cuda.is_available():
         torch.cuda.synchronize()
