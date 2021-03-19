@@ -3,7 +3,7 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Linear, Conv1d
-from torch_geometric.nn import GCNConv, RGCNConv, global_sort_pool, global_add_pool
+from torch_geometric.nn import GCNConv, RGCNConv, global_sort_pool, global_add_pool,SAGEConv
 from torch_geometric.utils import dropout_adj
 from util_functions import *
 import pdb
@@ -12,7 +12,7 @@ import time
 
 class GNN(torch.nn.Module):
     # a base GNN class, GCN message passing + sum_pooling
-    def __init__(self, dataset, gconv=GCNConv, latent_dim=[32, 32, 32, 1], 
+    def __init__(self, dataset, gconv=SAGEConv, latent_dim=[32, 32, 32, 1],
                  regression=False, adj_dropout=0.2, force_undirected=False):
         super(GNN, self).__init__()
         self.regression = regression
@@ -62,7 +62,7 @@ class GNN(torch.nn.Module):
 
 class DGCNN(GNN):
     # DGCNN from [Zhang et al. AAAI 2018], GCN message passing + SortPooling
-    def __init__(self, dataset, gconv=GCNConv, latent_dim=[32, 32, 32, 1], k=30, 
+    def __init__(self, dataset, gconv=SAGEConv, latent_dim=[32, 32, 32, 1], k=30,
                  regression=False, adj_dropout=0.2, force_undirected=False):
         super(DGCNN, self).__init__(
             dataset, gconv, latent_dim, regression, adj_dropout, force_undirected
@@ -122,12 +122,12 @@ class DGCNN(GNN):
 
 class DGCNN_RS(DGCNN):
     # A DGCNN model using RGCN convolution to take consideration of edge types.
-    def __init__(self, dataset, gconv=RGCNConv, latent_dim=[32, 32, 32, 1], k=30, 
+    def __init__(self, dataset, gconv=RGCNConv, latent_dim=[32, 32, 32, 1], k=30,
                  num_relations=5, num_bases=2, regression=False, adj_dropout=0.2, 
                  force_undirected=False):
         super(DGCNN_RS, self).__init__(
             dataset, 
-            GCNConv, 
+            SAGEConv,
             latent_dim, 
             k, 
             regression, 
@@ -175,7 +175,7 @@ class IGMC(GNN):
                  force_undirected=False, side_features=False, n_side_features=0, 
                  multiply_by=1):
         super(IGMC, self).__init__(
-            dataset, GCNConv, latent_dim, regression, adj_dropout, force_undirected
+            dataset, SAGEConv, latent_dim, regression, adj_dropout, force_undirected
         )
         self.multiply_by = multiply_by
         self.convs = torch.nn.ModuleList()
