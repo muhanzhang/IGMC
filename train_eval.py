@@ -166,7 +166,10 @@ def train(model, optimizer, loader, device, regression=False, ARR=0,
         if show_progress:
             pbar.set_description('Epoch {}, batch loss: {}'.format(epoch, loss.item()))
         if ARR != 0:
+
             for gconv in model.convs:
+                # wendi test
+                #print(gconv)
                 w = torch.matmul(
                     gconv.att, 
                     gconv.basis.view(gconv.num_bases, -1)
@@ -321,6 +324,3 @@ def visualize(model, graphs, res_dir, data_name, class_values, num=5, sort_by='p
     cbar.ax.tick_params(labelsize=22)
     f.savefig(os.path.join(res_dir, "visualization_{}_{}.pdf".format(data_name, sort_by)), 
             interpolation='nearest', bbox_inches='tight')
-    
-    
-    
