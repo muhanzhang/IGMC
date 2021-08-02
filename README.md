@@ -5,6 +5,7 @@ IGMC -- Inductive Graph-based Matrix Completion
 
 Update
 ------
+
 11/23/2020: Optimized the subgraph extraction speed further. On large datasets it shows up to 20 times speed-up.
 
 8/27/2020: Significantly improved the subgraph extraction speed. With an 8-core machine, now it only takes 30 seconds and 10 minutes to extract subgraphs for ml_100k and ml_1m, respectively. Using --dynamic-dataset also shows about 50% speed-up.
@@ -20,7 +21,7 @@ Since IGMC is inductive, it can generalize to users/items unseen during the trai
 Requirements
 ------------
 
-Latest tested combination: Python 3.8.1 + PyTorch 1.4.0 + PyTorch_Geometric 1.4.2.
+Latest tested combination: Python 3.8.1 + PyTorch 1.4.0 + PyTorch_Geometric 1.4.2. If your PyG version is higher than this, please refer to [#7](https://github.com/muhanzhang/IGMC/issues/7).
 
 Install [PyTorch](https://pytorch.org/)
 

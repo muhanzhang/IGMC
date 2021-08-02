@@ -299,6 +299,8 @@ def construct_pyg_graph(u, v, r, node_labels, max_node_label, y, node_features):
 
 def neighbors(fringe, A):
     # find all 1-hop neighbors of nodes in fringe from A
+    if not fringe:
+        return set([])
     return set(A[list(fringe)].indices)
 
 
