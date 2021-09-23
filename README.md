@@ -25,7 +25,7 @@ Requirements
 
 Stable version: Python 3.8.1 + PyTorch 1.4.0 + PyTorch_Geometric 1.4.2. If your PyG version is higher than this, please refer to [#7](https://github.com/muhanzhang/IGMC/issues/7).
 
-If you use latest PyTorch/PyG versions, you may also refer to the "latest" branch.
+If you use latest PyTorch/PyG versions, you may also refer to the [latest](https://github.com/muhanzhang/IGMC/tree/latest) branch.
 
 Install [PyTorch](https://pytorch.org/)
 
