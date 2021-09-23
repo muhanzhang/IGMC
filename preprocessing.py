@@ -479,7 +479,7 @@ def load_official_trainvaltest_split(dataset, testing=False, rating_map=None, po
                          'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi',
                          'Thriller', 'War', 'Western']
         movie_df = pd.read_csv(movie_file, sep=sep, header=None,
-                               names=movie_headers, engine='python')
+                               names=movie_headers, engine='python', encoding='ISO-8859-1')
 
         genre_headers = movie_df.columns.values[6:]
         num_genres = genre_headers.shape[0]
