@@ -132,7 +132,7 @@ class MyDynamicDataset(Dataset):
             self.links = (links[0][perm], links[1][perm])
             self.labels = labels[perm]
 
-    def __len__(self):
+    def len(self):
         return len(self.links[0])
 
     def get(self, idx):
