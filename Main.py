@@ -258,7 +258,7 @@ Explanations of the above preprocessing:
     They are transformed to rating labels 0, 1, 2... acsendingly.
     Thus, to get the original rating from a rating label, apply: class_values[label]
     Note that train_labels etc. are all rating labels.
-    But the numbers in adj_train are rating labels + 1, why? Because to accomodate 
+    But the numbers in adj_train are rating labels + 1, why? Because to accommodate 
     neutral ratings 0! Thus, to get any edge label from adj_train, remember to substract 1.
     If testing=True, adj_train will include both train and val ratings, and all train 
     data will be the combination of train and val.
